@@ -4,7 +4,7 @@ import { ProgressBar } from "./ProgressBar";
 import { useSpecialMissions } from "../hooks/useSpecialMissions";
 
 interface SpecialMissionProps {
-  onComplete: (prizeAmount: number) => void;
+  onComplete: (prizeText: string) => void;
   onProgress: (message: string) => void;
 }
 
@@ -39,7 +39,7 @@ export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) 
         setIsCompleted(true);
         if (!prizeClaimed) {
           setPrizeClaimed(true);
-          onComplete(prizeAmount);
+          onComplete(currentMission?.prize || `+${prizeAmount} Moedas!`);
         }
       }
     }

@@ -94,11 +94,20 @@ const Home = () => {
     setIsToday(todaySelected);
   };
 
-  const handleSpecialMissionComplete = async (prizeAmount: number) => {
+  const handleSpecialMissionComplete = async (prizeText: string) => {
     if (!selectedChild) return;
-    const newBalance = coinBalance + prizeAmount;
-    await updateChildCoinBalance(selectedChild.id, newBalance);
-    showFeedbackMessage(`PRÊMIO! +${prizeAmount} Moedas!`);
+    
+    // Check if the prize is coins (contains "moedas")
+    const coinMatch = prizeText.match(/(\d+)\s*moedas?/i);
+    if (coinMatch) {
+      const coinsAmount = parseInt(coinMatch[1]);
+      const newBalance = coinBalance + coinsAmount;
+      await updateChildCoinBalance(selectedChild.id, newBalance);
+      showFeedbackMessage(`PRÊMIO! +${coinsAmount} Moedas!`);
+    } else {
+      // For non-coin prizes, just show the prize message
+      showFeedbackMessage(`PRÊMIO! ${prizeText}`);
+    }
   };
 
   const handleSettingsClick = () => {
