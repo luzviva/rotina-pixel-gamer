@@ -11,6 +11,7 @@ interface QuestCardProps {
   timeEnd?: string | null;
   timeMode?: 'start-end' | 'start-duration';
   durationMinutes?: number | null;
+  dueDate?: string | null;
   onToggle: (completed: boolean) => void;
 }
 
@@ -24,6 +25,7 @@ export const QuestCard = ({
   timeEnd,
   timeMode,
   durationMinutes,
+  dueDate,
   onToggle 
 }: QuestCardProps) => {
   const formatTime = (time: string) => {
@@ -40,6 +42,16 @@ export const QuestCard = ({
     } else {
       return formatTime(timeStart);
     }
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.getDate(); // Retorna apenas o dia do mês
+  };
+
+  const getDateDisplay = () => {
+    if (!dueDate) return null;
+    return `Dia ${formatDate(dueDate)}`;
   };
   return (
     <div 
@@ -61,6 +73,12 @@ export const QuestCard = ({
         {getTimeDisplay() && (
           <p className="text-sm text-yellow-300 mt-1">
             🕒 {getTimeDisplay()}
+            {getDateDisplay() && ` • ${getDateDisplay()}`}
+          </p>
+        )}
+        {!getTimeDisplay() && getDateDisplay() && (
+          <p className="text-sm text-yellow-300 mt-1">
+            📅 {getDateDisplay()}
           </p>
         )}
       </div>

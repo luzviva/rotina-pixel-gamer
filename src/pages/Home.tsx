@@ -249,6 +249,7 @@ const Home = () => {
                   timeEnd={task.time_end}
                   timeMode={task.time_mode}
                   durationMinutes={task.duration_minutes}
+                  dueDate={task.due_date}
                   onToggle={(completed) => handleTaskToggle(task.id, completed)}
                 />
               ))
