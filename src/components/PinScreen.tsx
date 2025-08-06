@@ -40,13 +40,6 @@ export const PinScreen = ({ onPinSuccess }: PinScreenProps) => {
   };
 
   const checkPin = () => {
-    // PIN para criança: 1234
-    if (currentPin === '1234') {
-      onPinSuccess('child');
-      clearPin();
-      return;
-    }
-
     // PIN para pais: verificar PIN personalizado ou padrão '9999'
     if (userProfile?.parent_pin) {
       // Se o usuário tem PIN personalizado, só aceitar o PIN personalizado
