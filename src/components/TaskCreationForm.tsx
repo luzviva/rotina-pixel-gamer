@@ -20,32 +20,34 @@ interface TaskFormData {
 
 interface TaskCreationFormProps {
   onSubmit: (data: TaskFormData) => void;
+  initialData?: Partial<TaskFormData>;
 }
 
-export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
+export const TaskCreationForm = ({ onSubmit, initialData }: TaskCreationFormProps) => {
   const { children, loading } = useChildren();
   
   const [formData, setFormData] = useState<TaskFormData>({
-    title: 'Escovar os dentes',
-    description: 'Lembre-se de escovar bem por 2 minutos.',
-    reward: 5,
-    child: '',
-    frequency: 'DIARIA',
-    dateStart: '',
-    dateEnd: '',
-    weekdays: ['mon', 'tue', 'wed', 'thu', 'fri'],
-    timeStart: '08:00',
-    timeEnd: '08:10',
-    timeMode: 'start-end',
-    duration: 10,
+    title: initialData?.title || 'Escovar os dentes',
+    description: initialData?.description || 'Lembre-se de escovar bem por 2 minutos.',
+    reward: initialData?.reward || 5,
+    child: initialData?.child || '',
+    frequency: initialData?.frequency || 'DIARIA',
+    dateStart: initialData?.dateStart || '',
+    dateEnd: initialData?.dateEnd || '',
+    weekdays: initialData?.weekdays || ['mon', 'tue', 'wed', 'thu', 'fri'],
+    timeStart: initialData?.timeStart || '08:00',
+    timeEnd: initialData?.timeEnd || '08:10',
+    timeMode: initialData?.timeMode || 'start-end',
+    duration: initialData?.duration || 10,
+    specificDate: initialData?.specificDate || '',
   });
 
-  // Set first child as default when children are loaded
+  // Set first child as default when children are loaded, unless we have initial data
   useEffect(() => {
-    if (children.length > 0 && !formData.child) {
+    if (children.length > 0 && !formData.child && !initialData?.child) {
       setFormData(prev => ({ ...prev, child: children[0].id }));
     }
-  }, [children, formData.child]);
+  }, [children, formData.child, initialData?.child]);
 
   const updateFrequencyFields = (frequency: string) => {
     setFormData(prev => ({ ...prev, frequency: frequency as any }));

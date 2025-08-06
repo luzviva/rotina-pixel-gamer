@@ -353,7 +353,20 @@ export const TasksList = () => {
             <DialogTitle>Editar Tarefa</DialogTitle>
           </DialogHeader>
           {editingTask && (
-            <TaskCreationForm onSubmit={handleUpdateTask} />
+            <TaskCreationForm 
+              onSubmit={handleUpdateTask}
+              initialData={{
+                title: editingTask.title,
+                description: editingTask.description || '',
+                reward: editingTask.points,
+                child: editingTask.child_id,
+                frequency: editingTask.frequency as 'DIARIA' | 'SEMANAL' | 'UNICA',
+                timeStart: editingTask.time_start?.slice(0, 5) || '', // Remove seconds
+                timeEnd: editingTask.time_end?.slice(0, 5) || '', // Remove seconds
+                timeMode: 'start-end' as const,
+                specificDate: editingTask.due_date || '',
+              }}
+            />
           )}
         </DialogContent>
       </Dialog>
