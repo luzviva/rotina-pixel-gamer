@@ -10,17 +10,23 @@ import { FeedbackModal } from "../components/FeedbackModal";
 import { SpecialMission } from "../components/SpecialMission";
 import { Settings, ShoppingCart } from "lucide-react";
 import { useTasks } from "../hooks/useTasks";
+import { useChildren } from "../hooks/useChildren";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [coinBalance, setCoinBalance] = useState(125);
-  const { tasks: allTasks, loading, error, updateTaskCompletion, getTasksForDate } = useTasks();
+  const { children, loading: childrenLoading, updateChildCoinBalance } = useChildren();
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const { tasks: allTasks, loading: tasksLoading, error, updateTaskCompletion, getTasksForDate } = useTasks(selectedChildId || undefined);
 
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 7, 5));
   const [isToday, setIsToday] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+
+  // Seleciona automaticamente a primeira criança quando disponível
+  const selectedChild = selectedChildId ? children.find(child => child.id === selectedChildId) : null;
+  const coinBalance = selectedChild?.coin_balance || 0;
 
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const dayTitleNames = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
@@ -36,6 +42,13 @@ const Home = () => {
     setTimeout(() => setIsVisible(true), 100);
   }, []);
 
+  useEffect(() => {
+    // Seleciona automaticamente a primeira criança quando disponível
+    if (children.length > 0 && !selectedChildId) {
+      setSelectedChildId(children[0].id);
+    }
+  }, [children, selectedChildId]);
+
   const showFeedbackMessage = (message: string) => {
     setFeedbackMessage(message);
     setShowFeedback(true);
@@ -43,13 +56,14 @@ const Home = () => {
 
   const handleTaskToggle = async (taskId: string, completed: boolean) => {
     const task = allTasks.find(t => t.id === taskId);
-    if (!task) return;
+    if (!task || !selectedChild) return;
 
     if (completed) {
       // Marca como completa e adiciona moedas
       const success = await updateTaskCompletion(taskId, true);
       if (success) {
-        setCoinBalance(prev => prev + task.points);
+        const newBalance = coinBalance + task.points;
+        await updateChildCoinBalance(selectedChild.id, newBalance);
         showFeedbackMessage(`+${task.points} Moedas!`);
       }
     } else {
@@ -57,7 +71,8 @@ const Home = () => {
       if (coinBalance >= task.points) {
         const success = await updateTaskCompletion(taskId, false);
         if (success) {
-          setCoinBalance(prev => prev - task.points);
+          const newBalance = coinBalance - task.points;
+          await updateChildCoinBalance(selectedChild.id, newBalance);
         }
       } else {
         showFeedbackMessage('Moedas já gastas!');
@@ -70,8 +85,10 @@ const Home = () => {
     setIsToday(todaySelected);
   };
 
-  const handleSpecialMissionComplete = (prizeAmount: number) => {
-    setCoinBalance(prev => prev + prizeAmount);
+  const handleSpecialMissionComplete = async (prizeAmount: number) => {
+    if (!selectedChild) return;
+    const newBalance = coinBalance + prizeAmount;
+    await updateChildCoinBalance(selectedChild.id, newBalance);
     showFeedbackMessage(`PRÊMIO! +${prizeAmount} Moedas!`);
   };
 
@@ -107,7 +124,7 @@ const Home = () => {
           {/* Informações Centrais */}
           <div className="flex-grow">
             <div className="flex justify-between items-baseline mb-1">
-              <h1 className="text-xl md:text-2xl text-cyan-400">Aventureiro</h1>
+              <h1 className="text-xl md:text-2xl text-cyan-400">{selectedChild?.name || "Aventureiro"}</h1>
               <div className="flex items-center gap-1 text-xl md:text-2xl text-yellow-400">
                 <CoinIcon />
                 <span>{coinBalance}</span>
@@ -142,6 +159,26 @@ const Home = () => {
 
         {/* PAINEL DE MISSÕES */}
         <main>
+          {/* SELETOR DE CRIANÇA */}
+          {children.length > 1 && (
+            <div className="mb-6">
+              <div className="pixel-border p-4 text-center">
+                <h3 className="text-xl text-cyan-400 mb-4">Selecionar Aventureiro</h3>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {children.map(child => (
+                    <PixelButton
+                      key={child.id}
+                      className={`px-4 py-2 ${selectedChildId === child.id ? 'bg-cyan-500/20' : ''}`}
+                      onClick={() => setSelectedChildId(child.id)}
+                    >
+                      {child.name}
+                    </PixelButton>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* MISSÃO ESPECIAL DO DIA */}
           <SpecialMission 
             onComplete={handleSpecialMissionComplete}
@@ -157,7 +194,15 @@ const Home = () => {
           </div>
 
           <div className="space-y-6">
-            {loading ? (
+            {childrenLoading ? (
+              <div className="text-center text-cyan-400">Carregando crianças...</div>
+            ) : children.length === 0 ? (
+              <div className="text-center text-cyan-400/80 p-6 text-lg">
+                Nenhuma criança cadastrada! Cadastre uma criança primeiro.
+              </div>
+            ) : !selectedChild ? (
+              <div className="text-center text-cyan-400">Selecione uma criança</div>
+            ) : tasksLoading ? (
               <div className="text-center text-cyan-400">Carregando tarefas...</div>
             ) : error ? (
               <div className="text-center text-red-400">Erro: {error}</div>
