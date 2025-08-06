@@ -176,27 +176,27 @@ export const PinChangeModal = ({ open, onOpenChange }: PinChangeModalProps) => {
               <button
                 key={digit}
                 onClick={() => enterDigit(digit)}
-                className="pixel-btn aspect-square"
+                className="pixel-btn aspect-square text-2xl"
               >
                 {digit}
               </button>
             ))}
             <button
               onClick={clearPin}
-              className="pixel-btn aspect-square text-yellow-400 border-yellow-400"
+              className="pixel-btn aspect-square text-yellow-400 border-yellow-400 text-2xl"
               style={{ borderColor: 'hsl(var(--pixel-yellow))', color: 'hsl(var(--pixel-yellow))' }}
             >
               C
             </button>
             <button
               onClick={() => enterDigit('0')}
-              className="pixel-btn aspect-square"
+              className="pixel-btn aspect-square text-2xl"
             >
               0
             </button>
             <button
               onClick={handleNext}
-              className="pixel-btn aspect-square text-green-400 border-green-400"
+              className="pixel-btn aspect-square text-green-400 border-green-400 text-xl"
               style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}
               disabled={getCurrentPinLength() < 4}
             >
