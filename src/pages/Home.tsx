@@ -237,7 +237,17 @@ const Home = () => {
                 Nenhuma tarefa para este dia! Hora de brincar!
               </div>
             ) : (
-              tasksForSelectedDate.map(task => (
+              tasksForSelectedDate
+                .sort((a, b) => {
+                  // Se uma tarefa não tem horário, vai para o final
+                  if (!a.time_start && !b.time_start) return 0;
+                  if (!a.time_start) return 1;
+                  if (!b.time_start) return -1;
+                  
+                  // Compara os horários
+                  return a.time_start.localeCompare(b.time_start);
+                })
+                .map(task => (
                 <QuestCard
                   key={task.id}
                   id={task.id}
