@@ -66,7 +66,8 @@ export const PinScreen = ({ onPinSuccess }: PinScreenProps) => {
     <div className="flex flex-col items-center justify-center min-h-screen">
       <div className="pixel-border p-8 text-center w-full max-w-sm">
         <h1 className="text-4xl md:text-5xl text-yellow-400 mb-4">MISSÃO CONTROLE</h1>
-        <p className="text-xl mb-6">Digite o PIN para acessar</p>
+        <p className="text-xl mb-2">Digite o PIN para acessar</p>
+        <p className="text-sm text-gray-400 mb-6">PIN padrão: 9999</p>
         <div className="h-16 w-full bg-black/50 border-4 border-cyan-400 mb-6 flex items-center justify-center text-4xl tracking-[1rem]">
           <span>{'*'.repeat(currentPin.length)}</span>
         </div>
