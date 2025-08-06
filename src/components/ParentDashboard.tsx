@@ -144,10 +144,64 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     setOpenDialogs(prev => ({ ...prev, store: false }));
   };
 
-  const handleSpecialMissionSubmit = (data: any) => {
-    console.log('Nova missão especial:', data);
-    // Aqui implementaria a lógica para salvar a missão especial
-    setOpenDialogs(prev => ({ ...prev, mission: false }));
+  const handleSpecialMissionSubmit = async (data: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Calcular pontos baseado no tipo de prêmio
+      let points = 0;
+      if (data.prizeType === 'coins') {
+        points = data.coinsAmount || 25;
+      } else {
+        points = 50; // Valor padrão para outros tipos de prêmio
+      }
+
+      const { error } = await supabase
+        .from('special_missions')
+        .insert({
+          title: data.title,
+          description: `Execuções necessárias: ${data.executions}. Prêmio: ${
+            data.prizeType === 'coins' ? `${data.coinsAmount} moedas` :
+            data.prizeType === 'store-item' ? data.storeItem :
+            data.textDescription
+          }`,
+          points,
+          created_by: user.id,
+          is_active: true,
+        });
+
+      if (error) {
+        console.error('Erro ao criar missão especial:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao criar missão especial: " + error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Missão especial criada com sucesso!",
+      });
+
+      setOpenDialogs(prev => ({ ...prev, mission: false }));
+    } catch (error) {
+      console.error('Erro ao criar missão especial:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar missão especial",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

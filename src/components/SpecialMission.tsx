@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PixelButton } from "./PixelButton";
 import { ProgressBar } from "./ProgressBar";
+import { useSpecialMissions } from "../hooks/useSpecialMissions";
 
 interface SpecialMissionProps {
   onComplete: (prizeAmount: number) => void;
@@ -8,12 +9,25 @@ interface SpecialMissionProps {
 }
 
 export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) => {
+  const { missions, loading } = useSpecialMissions();
   const [progress, setProgress] = useState(2);
   const [isCompleted, setIsCompleted] = useState(false);
   const [prizeClaimed, setPrizeClaimed] = useState(false);
   
-  const total = 5;
-  const prizeAmount = 25;
+  // Pega a primeira missão ativa ou usa valores padrão
+  const currentMission = missions.length > 0 ? missions[0] : null;
+  const total = 5; // Pode ser extraído da description da missão
+  const prizeAmount = currentMission?.points || 25;
+  const missionTitle = currentMission?.title || "Beba 5 copos de água hoje!";
+
+  if (loading) {
+    return (
+      <div className="pixel-border p-4 mb-6 text-center">
+        <h3 className="text-2xl text-purple-400">✨ MISSÃO ESPECIAL ✨</h3>
+        <p className="text-xl mt-2">Carregando...</p>
+      </div>
+    );
+  }
 
   const handleProgressClick = () => {
     if (progress < total && !isCompleted) {
@@ -34,7 +48,7 @@ export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) 
   return (
     <div className="pixel-border p-4 mb-6 text-center">
       <h3 className="text-2xl text-purple-400">✨ MISSÃO ESPECIAL ✨</h3>
-      <p className="text-xl mt-2">Beba 5 copos de água hoje!</p>
+      <p className="text-xl mt-2">{missionTitle}</p>
       
       <div className="my-4 max-w-md mx-auto flex items-center gap-4">
         {!isCompleted && (
