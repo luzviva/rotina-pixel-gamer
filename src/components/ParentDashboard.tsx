@@ -4,6 +4,7 @@ import { SpecialMissionCreationForm } from "./SpecialMissionCreationForm";
 import { TasksList } from "./TasksList";
 import { StoreItemsList } from "./StoreItemsList";
 import { PinChangeModal } from "./PinChangeModal";
+import { PasswordChangeModal } from "./PasswordChangeModal";
 import { FeedbackForm } from "./FeedbackForm";
 import { DonationPage } from "./DonationPage";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Heart, Gift, ArrowLeft } from "lucide-react";
+import { Settings, Heart, Gift, ArrowLeft, KeyRound } from "lucide-react";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -25,6 +26,7 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     store: false,
     mission: false,
     pinChange: false,
+    passwordChange: false,
     feedback: false,
     donation: false
   });
@@ -389,6 +391,16 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
           Alterar PIN
         </button>
 
+        {/* Botão Alterar Senha */}
+        <button 
+          onClick={() => setOpenDialogs(prev => ({ ...prev, passwordChange: true }))} 
+          className="pixel-btn text-red-400 w-64 text-xl py-4 flex items-center justify-center gap-2" 
+          style={{ borderColor: 'hsl(var(--pixel-red))', color: 'hsl(var(--pixel-red))' }}
+        >
+          <KeyRound size={20} />
+          Alterar Senha
+        </button>
+
       </main>
 
       {/* Lista de Tarefas Existentes */}
@@ -405,6 +417,12 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
       <PinChangeModal 
         open={openDialogs.pinChange} 
         onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, pinChange: open }))} 
+      />
+
+      {/* Modal para alterar senha */}
+      <PasswordChangeModal 
+        open={openDialogs.passwordChange} 
+        onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, passwordChange: open }))} 
       />
     </div>
   );
