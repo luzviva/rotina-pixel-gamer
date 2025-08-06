@@ -7,15 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const {
+    signIn,
+    signUp
+  } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSignIn = async () => {
     if (!email || !password) {
       toast({
@@ -25,17 +28,15 @@ export default function Auth() {
       });
       return;
     }
-
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const {
+      error
+    } = await signIn(email, password);
     setLoading(false);
-
     if (error) {
       toast({
         title: "Erro no login",
-        description: error.message === "Invalid login credentials" 
-          ? "Email ou senha incorretos" 
-          : error.message,
+        description: error.message === "Invalid login credentials" ? "Email ou senha incorretos" : error.message,
         variant: "destructive"
       });
     } else {
@@ -46,7 +47,6 @@ export default function Auth() {
       navigate('/');
     }
   };
-
   const handleSignUp = async () => {
     if (!email || !password) {
       toast({
@@ -56,7 +56,6 @@ export default function Auth() {
       });
       return;
     }
-
     if (password.length < 6) {
       toast({
         title: "Senha muito curta",
@@ -65,11 +64,11 @@ export default function Auth() {
       });
       return;
     }
-
     setLoading(true);
-    const { error } = await signUp(email, password);
+    const {
+      error
+    } = await signUp(email, password);
     setLoading(false);
-
     if (error) {
       if (error.message.includes("already registered")) {
         toast({
@@ -91,9 +90,7 @@ export default function Auth() {
       });
     }
   };
-
-  return (
-    <div className="min-h-screen bg-pixel-dark flex items-center justify-center p-4">
+  return <div className="min-h-screen bg-pixel-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-cyan-400 mb-2">Rotina Pixel Gamer</h1>
@@ -117,46 +114,28 @@ export default function Auth() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="email" className="text-gray-300">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className="bg-pixel-dark border-pixel-green text-white"
-                  />
+                  <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" className="bg-pixel-dark border-pixel-green text-white bg-slate-400" />
                 </div>
                 <div>
                   <Label htmlFor="password" className="text-gray-300">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="bg-pixel-dark border-pixel-green text-white"
-                  />
+                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="bg-pixel-dark border-pixel-green text-white bg-slate-400" />
                 </div>
               </div>
 
               <TabsContent value="login" className="mt-6">
-                <Button
-                  onClick={handleSignIn}
-                  disabled={loading}
-                  className="w-full pixel-btn text-cyan-400"
-                  style={{ borderColor: 'hsl(var(--pixel-cyan))', color: 'hsl(var(--pixel-cyan))' }}
-                >
+                <Button onClick={handleSignIn} disabled={loading} className="w-full pixel-btn text-cyan-400" style={{
+                borderColor: 'hsl(var(--pixel-cyan))',
+                color: 'hsl(var(--pixel-cyan))'
+              }}>
                   {loading ? 'Entrando...' : 'Entrar'}
                 </Button>
               </TabsContent>
 
               <TabsContent value="register" className="mt-6">
-                <Button
-                  onClick={handleSignUp}
-                  disabled={loading}
-                  className="w-full pixel-btn text-green-400"
-                  style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}
-                >
+                <Button onClick={handleSignUp} disabled={loading} className="w-full pixel-btn text-green-400" style={{
+                borderColor: 'hsl(var(--pixel-green))',
+                color: 'hsl(var(--pixel-green))'
+              }}>
                   {loading ? 'Cadastrando...' : 'Cadastrar'}
                 </Button>
                 <p className="text-xs text-gray-400 mt-2 text-center">
@@ -167,6 +146,5 @@ export default function Auth() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 }
