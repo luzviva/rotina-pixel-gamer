@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TaskFormData {
   title: string;
@@ -55,9 +56,12 @@ export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
   };
 
   return (
-    <div className="pixel-border p-6">
-      <h2 className="text-3xl text-yellow-400 mb-6 border-b-4 border-yellow-400 pb-2">Criar Nova Tarefa</h2>
-      <form className="space-y-4" onSubmit={handleSubmit}>
+    <div className="pixel-border h-[80vh] flex flex-col">
+      <div className="p-6 pb-0">
+        <h2 className="text-3xl text-yellow-400 mb-6 border-b-4 border-yellow-400 pb-2">Criar Nova Tarefa</h2>
+      </div>
+      <ScrollArea className="flex-1 px-6">
+        <form className="space-y-4 pb-6" onSubmit={handleSubmit}>
         <div>
           <label htmlFor="task-title" className="text-lg block mb-1">Título da Tarefa</label>
           <input 
@@ -308,7 +312,8 @@ export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
             Salvar Tarefa
           </button>
         </div>
-      </form>
+        </form>
+      </ScrollArea>
     </div>
   );
 };
