@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useChildren } from "@/hooks/useChildren";
 
 interface TaskFormData {
   title: string;
@@ -22,11 +23,13 @@ interface TaskCreationFormProps {
 }
 
 export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
+  const { children, loading } = useChildren();
+  
   const [formData, setFormData] = useState<TaskFormData>({
     title: 'Escovar os dentes',
     description: 'Lembre-se de escovar bem por 2 minutos.',
     reward: 5,
-    child: 'Aventureiro',
+    child: '',
     frequency: 'DIARIA',
     dateStart: '',
     dateEnd: '',
@@ -36,6 +39,13 @@ export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
     timeMode: 'start-end',
     duration: 10,
   });
+
+  // Set first child as default when children are loaded
+  useEffect(() => {
+    if (children.length > 0 && !formData.child) {
+      setFormData(prev => ({ ...prev, child: children[0].id }));
+    }
+  }, [children, formData.child]);
 
   const updateFrequencyFields = (frequency: string) => {
     setFormData(prev => ({ ...prev, frequency: frequency as any }));
@@ -99,9 +109,19 @@ export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
               className="nes-select"
               value={formData.child}
               onChange={(e) => setFormData(prev => ({ ...prev, child: e.target.value }))}
+              disabled={loading}
             >
-              <option>Aventureiro</option>
-              <option>Exploradora</option>
+              {loading ? (
+                <option>Carregando crianças...</option>
+              ) : children.length === 0 ? (
+                <option>Nenhuma criança cadastrada</option>
+              ) : (
+                children.map((child) => (
+                  <option key={child.id} value={child.id}>
+                    {child.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>
