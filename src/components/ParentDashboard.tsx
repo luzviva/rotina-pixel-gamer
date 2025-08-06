@@ -4,6 +4,8 @@ import { SpecialMissionCreationForm } from "./SpecialMissionCreationForm";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -11,16 +13,71 @@ interface ParentDashboardProps {
 
 export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [openDialogs, setOpenDialogs] = useState({
     task: false,
     store: false,
     mission: false
   });
 
-  const handleTaskSubmit = (data: any) => {
-    console.log('Nova tarefa:', data);
-    // Aqui implementaria a lógica para salvar a tarefa
-    setOpenDialogs(prev => ({ ...prev, task: false }));
+  const handleTaskSubmit = async (data: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Prepare task data for database
+      const taskData = {
+        title: data.title,
+        description: data.description,
+        points: data.reward,
+        child_id: data.child,
+        created_by: user.id,
+        frequency: data.frequency,
+        date_start: data.dateStart || null,
+        date_end: data.dateEnd || null,
+        due_date: data.specificDate || null,
+        weekdays: data.weekdays || null,
+        time_start: data.timeStart || null,
+        time_end: data.timeMode === 'start-end' ? data.timeEnd : null,
+        time_mode: data.timeMode,
+        duration_minutes: data.timeMode === 'start-duration' ? data.duration : null,
+      };
+
+      const { error } = await supabase
+        .from('tasks')
+        .insert([taskData]);
+
+      if (error) {
+        console.error('Erro ao criar tarefa:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao criar tarefa: " + error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Tarefa criada com sucesso!",
+      });
+
+      setOpenDialogs(prev => ({ ...prev, task: false }));
+    } catch (error) {
+      console.error('Erro ao criar tarefa:', error);
+      toast({
+        title: "Erro", 
+        description: "Erro ao criar tarefa",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStoreItemSubmit = (data: any) => {
