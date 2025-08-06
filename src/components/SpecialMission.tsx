@@ -16,7 +16,7 @@ export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) 
   
   // Pega a primeira missão ativa ou usa valores padrão
   const currentMission = missions.length > 0 ? missions[0] : null;
-  const total = 5; // Pode ser extraído da description da missão
+  const total = currentMission?.description ? parseInt(currentMission.description.match(/\d+/)?.[0] || "5") : 5;
   const prizeAmount = currentMission?.points || 25;
   const missionTitle = currentMission?.title || "Beba 5 copos de água hoje!";
 
