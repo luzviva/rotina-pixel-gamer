@@ -28,7 +28,7 @@ export const StoreItemsList = () => {
   const [editingItem, setEditingItem] = useState<StoreItem | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Estados dos filtros
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'unavailable'>('all');
