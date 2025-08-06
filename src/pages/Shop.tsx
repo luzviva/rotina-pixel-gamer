@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CoinIcon } from "../components/CoinIcon";
+import { useAuth } from "../hooks/useAuth";
+import { useChildren } from "../hooks/useChildren";
 
 interface StoreItem {
   id: number;
@@ -52,9 +54,20 @@ const ConfirmPurchaseModal = ({ item, isVisible, onClose, onConfirm }: ConfirmPu
 
 const Shop = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { children } = useChildren();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const coinBalance = 125; // This should come from props or context in a real app
+  const [selectedChild, setSelectedChild] = useState<any>(null);
+  
+  // Get the first child as selected child (you may want to add child selection logic)
+  useEffect(() => {
+    if (children.length > 0 && !selectedChild) {
+      setSelectedChild(children[0]);
+    }
+  }, [children, selectedChild]);
+  
+  const coinBalance = selectedChild?.coin_balance || 0;
 
   const storeItems: StoreItem[] = [
     {
