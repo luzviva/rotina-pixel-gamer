@@ -1,6 +1,7 @@
 import { TaskCreationForm } from "./TaskCreationForm";
 import { StoreItemCreationForm } from "./StoreItemCreationForm";
 import { SpecialMissionCreationForm } from "./SpecialMissionCreationForm";
+import { TasksList } from "./TasksList";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { useState } from "react";
@@ -360,6 +361,11 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
           Sair
         </button>
       </main>
+
+      {/* Lista de Tarefas Existentes */}
+      <div className="mt-8 max-w-6xl mx-auto px-4">
+        <TasksList />
+      </div>
     </div>
   );
 };
