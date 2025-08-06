@@ -37,59 +37,34 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
       description: data.description,
       points: data.reward,
       child_id: data.child,
-      frequency: data.frequency,
+      weekdays: data.weekdays,
       time_start: data.timeStart || null,
       time_end: data.timeMode === 'start-end' ? data.timeEnd : null,
       time_mode: data.timeMode,
       duration_minutes: data.timeMode === 'start-duration' ? data.duration : null,
     };
 
-    if (data.frequency === 'UNICA') {
-      // Tarefa única: criar apenas uma instância
-      instances.push({
-        ...baseTaskData,
-        due_date: data.specificDate,
-        date_start: data.specificDate,
-        date_end: data.specificDate,
-      });
-    } else if (data.frequency === 'DIARIA') {
-      // Tarefa diária: criar uma instância para cada dia
-      const startDate = new Date(data.dateStart);
-      const endDate = new Date(data.dateEnd);
+    // Criar instâncias para os próximos 30 dias nos dias da semana selecionados
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 30); // Próximos 30 dias
+    
+    const weekdaysMap = {
+      'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 
+      'thu': 4, 'fri': 5, 'sat': 6
+    };
+    
+    const selectedWeekdays = data.weekdays?.map((day: string) => weekdaysMap[day as keyof typeof weekdaysMap]) || [];
+    
+    for (let currentDate = new Date(today); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+      const dayOfWeek = currentDate.getDay();
       
-      for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+      if (selectedWeekdays.includes(dayOfWeek)) {
         const dateStr = currentDate.toISOString().split('T')[0];
         instances.push({
           ...baseTaskData,
           due_date: dateStr,
-          date_start: data.dateStart,
-          date_end: data.dateEnd,
         });
-      }
-    } else if (data.frequency === 'SEMANAL') {
-      // Tarefa semanal: criar uma instância para cada dia da semana selecionado
-      const startDate = new Date(data.dateStart);
-      const endDate = new Date(data.dateEnd);
-      const weekdaysMap = {
-        'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 
-        'thu': 4, 'fri': 5, 'sat': 6
-      };
-      
-      const selectedWeekdays = data.weekdays?.map((day: string) => weekdaysMap[day as keyof typeof weekdaysMap]) || [];
-      
-      for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
-        const dayOfWeek = currentDate.getDay();
-        
-        if (selectedWeekdays.includes(dayOfWeek)) {
-          const dateStr = currentDate.toISOString().split('T')[0];
-          instances.push({
-            ...baseTaskData,
-            due_date: dateStr,
-            date_start: data.dateStart,
-            date_end: data.dateEnd,
-            weekdays: data.weekdays,
-          });
-        }
       }
     }
     

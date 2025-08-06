@@ -7,11 +7,7 @@ interface TaskFormData {
   description: string;
   reward: number;
   child: string;
-  frequency: 'DIARIA' | 'SEMANAL' | 'UNICA' | 'DATAS_ESPECIFICAS';
-  dateStart?: string;
-  dateEnd?: string;
-  weekdays?: string[];
-  specificDate?: string;
+  weekdays: string[];
   timeStart?: string;
   timeEnd?: string;
   timeMode: 'start-end' | 'start-duration';
@@ -31,15 +27,11 @@ export const TaskCreationForm = ({ onSubmit, initialData }: TaskCreationFormProp
     description: initialData?.description || 'Lembre-se de escovar bem por 2 minutos.',
     reward: initialData?.reward || 5,
     child: initialData?.child || '',
-    frequency: initialData?.frequency || 'DIARIA',
-    dateStart: initialData?.dateStart || '',
-    dateEnd: initialData?.dateEnd || '',
     weekdays: initialData?.weekdays || ['mon', 'tue', 'wed', 'thu', 'fri'],
     timeStart: initialData?.timeStart || '08:00',
     timeEnd: initialData?.timeEnd || '08:10',
     timeMode: initialData?.timeMode || 'start-end',
     duration: initialData?.duration || 10,
-    specificDate: initialData?.specificDate || '',
   });
 
   // Set first child as default when children are loaded, unless we have initial data
@@ -48,10 +40,6 @@ export const TaskCreationForm = ({ onSubmit, initialData }: TaskCreationFormProp
       setFormData(prev => ({ ...prev, child: children[0].id }));
     }
   }, [children, formData.child, initialData?.child]);
-
-  const updateFrequencyFields = (frequency: string) => {
-    setFormData(prev => ({ ...prev, frequency: frequency as any }));
-  };
 
   const toggleWeekday = (day: string) => {
     setFormData(prev => ({
@@ -212,121 +200,34 @@ export const TaskCreationForm = ({ onSubmit, initialData }: TaskCreationFormProp
           )}
         </div>
 
-        <div>
-          <label htmlFor="task-frequency" className="text-lg block mb-1">Frequência</label>
-          <select 
-            id="task-frequency" 
-            className="nes-select" 
-            value={formData.frequency}
-            onChange={(e) => updateFrequencyFields(e.target.value)}
-          >
-            <option value="DIARIA">Diária</option>
-            <option value="SEMANAL">Semanal</option>
-            <option value="UNICA">Data Única</option>
-            <option value="DATAS_ESPECIFICAS">Datas Específicas</option>
-          </select>
-        </div>
-       
-        {/* Campos Dinâmicos de Frequência */}
-        <div className="space-y-4 pt-2">
-          {/* Diária */}
-          {formData.frequency === 'DIARIA' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="date-start-diaria" className="block mb-1">Data Início</label>
-                <input 
-                  type="date" 
-                  id="date-start-diaria" 
-                  className="nes-input"
-                  value={formData.dateStart || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dateStart: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label htmlFor="date-end-diaria" className="block mb-1">Data Fim</label>
-                <input 
-                  type="date" 
-                  id="date-end-diaria" 
-                  className="nes-input"
-                  value={formData.dateEnd || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
-                />
-              </div>
-            </div>
-          )}
-          
-          {/* Semanal */}
-          {formData.frequency === 'SEMANAL' && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="date-start-semanal" className="block mb-1">Data Início</label>
-                  <input 
-                    type="date" 
-                    id="date-start-semanal" 
-                    className="nes-input"
-                    value={formData.dateStart || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dateStart: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="date-end-semanal" className="block mb-1">Data Fim</label>
-                  <input 
-                    type="date" 
-                    id="date-end-semanal" 
-                    className="nes-input"
-                    value={formData.dateEnd || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
-                  />
-                </div>
-              </div>
-              <label className="block mb-1">Dias da Semana</label>
-              <div className="grid grid-cols-4 md:grid-cols-7 gap-2 text-center">
-                {[
-                  { key: 'sun', label: 'D' },
-                  { key: 'mon', label: 'S' },
-                  { key: 'tue', label: 'T' },
-                  { key: 'wed', label: 'Q' },
-                  { key: 'thu', label: 'Q' },
-                  { key: 'fri', label: 'S' },
-                  { key: 'sat', label: 'S' }
-                ].map(day => (
-                  <div key={day.key}>
-                    <input 
-                      type="checkbox" 
-                      id={day.key} 
-                      className="task-checkbox"
-                      checked={formData.weekdays?.includes(day.key) || false}
-                      onChange={() => toggleWeekday(day.key)}
-                    />
-                    <label htmlFor={day.key}>{day.label}</label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Única */}
-          {formData.frequency === 'UNICA' && (
-            <div>
-              <label htmlFor="date-unica" className="block mb-1">Data</label>
-              <input 
-                type="date" 
-                id="date-unica" 
-                className="nes-input"
-                value={formData.specificDate || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, specificDate: e.target.value }))}
-              />
-            </div>
-          )}
-          
-          {/* Datas Específicas */}
-          {formData.frequency === 'DATAS_ESPECIFICAS' && (
-            <div>
-              <label className="block mb-1">Selecione as datas</label>
-              <input type="text" className="nes-input" placeholder="Use um calendário de múltipla seleção aqui" />
-            </div>
-          )}
+        {/* Seleção de Dias da Semana */}
+        <div className="space-y-4 border-t border-gray-600 pt-4">
+          <h3 className="text-xl text-cyan-400">Dias da Semana</h3>
+          <p className="text-sm text-gray-400 mb-3">Selecione em quais dias da semana esta tarefa deve ser executada:</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { key: 'sun', label: 'Domingo' },
+              { key: 'mon', label: 'Segunda' },
+              { key: 'tue', label: 'Terça' },
+              { key: 'wed', label: 'Quarta' },
+              { key: 'thu', label: 'Quinta' },
+              { key: 'fri', label: 'Sexta' },
+              { key: 'sat', label: 'Sábado' }
+            ].map(day => (
+              <button
+                key={day.key}
+                type="button"
+                onClick={() => toggleWeekday(day.key)}
+                className={`pixel-btn p-3 text-center transition-colors ${
+                  formData.weekdays?.includes(day.key) 
+                    ? 'bg-cyan-400/20 text-cyan-400 border-cyan-400' 
+                    : 'bg-gray-800/50 text-gray-400 border-gray-600 hover:border-gray-500'
+                }`}
+              >
+                {day.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="pt-4">

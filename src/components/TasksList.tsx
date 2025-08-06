@@ -18,7 +18,7 @@ interface Task {
   due_date: string | null;
   time_start: string | null;
   time_end: string | null;
-  frequency: string;
+  weekdays: string[] | null;
   is_completed: boolean;
   created_at: string;
 }
@@ -348,9 +348,11 @@ export const TasksList = () => {
                       }`}>
                         {task.is_completed ? 'Concluída' : 'Pendente'}
                       </span>
-                      <span className="text-xs text-white/60">
-                        Frequência: {task.frequency}
-                      </span>
+                      <div className="text-xs text-white/60">
+                        {task.weekdays && task.weekdays.length > 0 && (
+                          <span>Dias: {task.weekdays.join(', ')}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -390,11 +392,10 @@ export const TasksList = () => {
                 description: editingTask.description || '',
                 reward: editingTask.points,
                 child: editingTask.child_id,
-                frequency: editingTask.frequency as 'DIARIA' | 'SEMANAL' | 'UNICA',
+                weekdays: editingTask.weekdays || [],
                 timeStart: editingTask.time_start?.slice(0, 5) || '', // Remove seconds
                 timeEnd: editingTask.time_end?.slice(0, 5) || '', // Remove seconds
                 timeMode: 'start-end' as const,
-                specificDate: editingTask.due_date || '',
               }}
             />
           )}
