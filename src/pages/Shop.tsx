@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { CoinIcon } from "../components/CoinIcon";
 import { useAuth } from "../hooks/useAuth";
 import { useChildren } from "../hooks/useChildren";
+import { supabase } from "../integrations/supabase/client";
+import { useToast } from "../hooks/use-toast";
 
 interface StoreItem {
   id: number;
@@ -55,7 +57,8 @@ const ConfirmPurchaseModal = ({ item, isVisible, onClose, onConfirm }: ConfirmPu
 const Shop = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { children } = useChildren();
+  const { children, fetchChildren } = useChildren();
+  const { toast } = useToast();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedChild, setSelectedChild] = useState<any>(null);
@@ -111,10 +114,37 @@ const Shop = () => {
     }
   };
 
-  const handleConfirmPurchase = () => {
-    setShowModal(false);
-    setSelectedItem(null);
-    // Aqui implementaria a lógica de compra
+  const handleConfirmPurchase = async () => {
+    if (!selectedItem || !selectedChild) return;
+    
+    try {
+      const newBalance = selectedChild.coin_balance - selectedItem.cost;
+      
+      const { error } = await supabase
+        .from('children')
+        .update({ coin_balance: newBalance })
+        .eq('id', selectedChild.id);
+        
+      if (error) throw error;
+      
+      // Refresh children data to update the UI
+      await fetchChildren();
+      
+      toast({
+        title: "Compra realizada!",
+        description: `${selectedItem.name} foi comprado com sucesso!`,
+      });
+      
+      setShowModal(false);
+      setSelectedItem(null);
+    } catch (error) {
+      console.error('Erro ao realizar compra:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao realizar a compra",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCloseModal = () => {
