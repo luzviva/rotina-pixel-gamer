@@ -4,12 +4,13 @@ import { SpecialMissionCreationForm } from "./SpecialMissionCreationForm";
 import { TasksList } from "./TasksList";
 import { StoreItemsList } from "./StoreItemsList";
 import { PinChangeModal } from "./PinChangeModal";
+import { FeedbackForm } from "./FeedbackForm";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings } from "lucide-react";
+import { Settings, Heart } from "lucide-react";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -22,7 +23,8 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     task: false,
     store: false,
     mission: false,
-    pinChange: false
+    pinChange: false,
+    feedback: false
   });
 
   const generateTaskInstances = (data: any) => {
@@ -355,6 +357,25 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
         >
           Criar Perfil
         </button>
+
+        {/* Botão Ajude-nos a melhorar */}
+        <Dialog open={openDialogs.feedback} onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, feedback: open }))}>
+          <DialogTrigger asChild>
+            <button 
+              className="pixel-btn text-pink-400 w-64 text-xl py-4 flex items-center justify-center gap-2" 
+              style={{ borderColor: 'hsl(var(--pixel-pink))', color: 'hsl(var(--pixel-pink))' }}
+            >
+              <Heart size={20} />
+              Ajude-nos a melhorar!
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Ajude-nos a melhorar o aplicativo!</DialogTitle>
+            </DialogHeader>
+            <FeedbackForm onClose={() => setOpenDialogs(prev => ({ ...prev, feedback: false }))} />
+          </DialogContent>
+        </Dialog>
 
         {/* Botão Alterar PIN */}
         <button 
