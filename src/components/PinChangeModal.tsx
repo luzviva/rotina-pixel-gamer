@@ -163,53 +163,49 @@ export const PinChangeModal = ({ open, onOpenChange }: PinChangeModalProps) => {
     }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-center">{getTitle()}</DialogTitle>
+          <DialogTitle className="text-center text-xl">{getTitle()}</DialogTitle>
         </DialogHeader>
         
-        <div className="flex flex-col items-center space-y-6">
+        <div className="flex flex-col items-center space-y-6 p-4">
           <div className="h-16 w-full bg-black/50 border-4 border-cyan-400 flex items-center justify-center text-4xl tracking-[1rem]">
             <span>{'*'.repeat(getCurrentPinLength())}</span>
           </div>
           
           <div className="grid grid-cols-3 gap-4 w-full">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(digit => (
-              <Button
+              <button
                 key={digit}
                 onClick={() => enterDigit(digit)}
-                variant="outline"
                 className="pixel-btn aspect-square"
               >
                 {digit}
-              </Button>
+              </button>
             ))}
-            <Button
+            <button
               onClick={clearPin}
-              variant="outline"
               className="pixel-btn aspect-square text-yellow-400 border-yellow-400"
               style={{ borderColor: 'hsl(var(--pixel-yellow))', color: 'hsl(var(--pixel-yellow))' }}
             >
               C
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={() => enterDigit('0')}
-              variant="outline"
               className="pixel-btn aspect-square"
             >
               0
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={handleNext}
-              variant="outline"
               className="pixel-btn aspect-square text-green-400 border-green-400"
               style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}
               disabled={getCurrentPinLength() < 4}
             >
               OK
-            </Button>
+            </button>
           </div>
           
           {error && (
-            <p className="text-red-500 text-center">{error}</p>
+            <p className="text-red-500 text-center h-6">{error}</p>
           )}
         </div>
       </DialogContent>
