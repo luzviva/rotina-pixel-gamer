@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChildren } from "@/hooks/useChildren";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { TaskCreationForm } from "./TaskCreationForm";
+import { Button } from "./ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Input } from "./ui/input";
 
 interface Task {
   id: string;
@@ -22,9 +25,17 @@ interface Task {
 
 export const TasksList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Estados dos filtros
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [childFilter, setChildFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('');
+  
   const { toast } = useToast();
   const { children } = useChildren();
 
@@ -54,6 +65,36 @@ export const TasksList = () => {
   useEffect(() => {
     fetchTasks();
   }, []);
+
+  // Aplicar filtros sempre que as tarefas ou filtros mudarem
+  useEffect(() => {
+    let filtered = [...tasks];
+
+    // Filtro por status
+    if (statusFilter === 'pending') {
+      filtered = filtered.filter(task => !task.is_completed);
+    } else if (statusFilter === 'completed') {
+      filtered = filtered.filter(task => task.is_completed);
+    }
+
+    // Filtro por criança
+    if (childFilter !== 'all') {
+      filtered = filtered.filter(task => task.child_id === childFilter);
+    }
+
+    // Filtro por data
+    if (dateFilter) {
+      filtered = filtered.filter(task => task.due_date === dateFilter);
+    }
+
+    setFilteredTasks(filtered);
+  }, [tasks, statusFilter, childFilter, dateFilter]);
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setChildFilter('all');
+    setDateFilter('');
+  };
 
   const handleDeleteTask = async (taskId: string) => {
     if (!confirm('Tem certeza que deseja excluir esta tarefa?')) {
@@ -152,17 +193,95 @@ export const TasksList = () => {
   return (
     <>
       <div className="pixel-border p-6 mt-8">
-        <h3 className="text-2xl text-yellow-400 mb-6 border-b-4 border-yellow-400 pb-2">
-          Tarefas Existentes ({tasks.length})
-        </h3>
+        <div className="flex justify-between items-center mb-6 border-b-4 border-yellow-400 pb-2">
+          <h3 className="text-2xl text-yellow-400">
+            Tarefas Existentes ({filteredTasks.length} de {tasks.length})
+          </h3>
+          <Button
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Filter size={16} />
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </Button>
+        </div>
+
+        {/* Seção de Filtros */}
+        {showFilters && (
+          <div className="bg-slate-800/30 border border-cyan-400/30 rounded p-4 mb-6">
+            <h4 className="text-lg text-cyan-400 mb-4">Filtros</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Filtro por Status */}
+              <div>
+                <label className="text-white/80 block mb-2">Status</label>
+                <Select value={statusFilter} onValueChange={(value: 'all' | 'pending' | 'completed') => setStatusFilter(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                    <SelectItem value="completed">Concluídas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por Criança */}
+              <div>
+                <label className="text-white/80 block mb-2">Criança</label>
+                <Select value={childFilter} onValueChange={setChildFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a criança" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as crianças</SelectItem>
+                    {children.map((child) => (
+                      <SelectItem key={child.id} value={child.id}>
+                        {child.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por Data */}
+              <div>
+                <label className="text-white/80 block mb-2">Data</label>
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="bg-slate-800 border-cyan-400/30"
+                />
+              </div>
+            </div>
+
+            {/* Botão para limpar filtros */}
+            <div className="mt-4">
+              <Button 
+                onClick={clearFilters} 
+                variant="outline" 
+                size="sm"
+                className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-400/10"
+              >
+                Limpar Filtros
+              </Button>
+            </div>
+          </div>
+        )}
         
         {tasks.length === 0 ? (
           <p className="text-cyan-400/80 text-center py-8">
             Nenhuma tarefa criada ainda. Crie sua primeira tarefa usando o botão acima!
           </p>
+        ) : filteredTasks.length === 0 ? (
+          <p className="text-cyan-400/80 text-center py-8">
+            Nenhuma tarefa encontrada com os filtros selecionados.
+          </p>
         ) : (
           <div className="space-y-4">
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <div key={task.id} className="bg-slate-800/50 border-2 border-cyan-400/30 p-4 rounded">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="text-xl text-cyan-400 font-bold">{task.title}</h4>
