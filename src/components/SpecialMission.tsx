@@ -10,7 +10,7 @@ interface SpecialMissionProps {
 
 export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) => {
   const { missions, loading } = useSpecialMissions();
-  const [progress, setProgress] = useState(2);
+  const [progress, setProgress] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [prizeClaimed, setPrizeClaimed] = useState(false);
   
