@@ -73,12 +73,6 @@ export const QuestCard = ({
         {getTimeDisplay() && (
           <p className="text-sm text-yellow-300 mt-1">
             🕒 {getTimeDisplay()}
-            {getDateDisplay() && ` • ${getDateDisplay()}`}
-          </p>
-        )}
-        {!getTimeDisplay() && getDateDisplay() && (
-          <p className="text-sm text-yellow-300 mt-1">
-            📅 {getDateDisplay()}
           </p>
         )}
       </div>
