@@ -194,33 +194,31 @@ export const TasksList = () => {
   return (
     <>
       <div className="pixel-border p-6 mt-8">
-        <div className="flex justify-between items-center mb-6 border-b-4 border-yellow-400 pb-2">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-yellow-400 hover:text-yellow-300 transition-colors"
-              title={isExpanded ? "Recolher lista" : "Expandir lista"}
-            >
-              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-            <h3 className="text-2xl text-yellow-400">
-              Tarefas Existentes ({filteredTasks.length} de {tasks.length})
-            </h3>
-          </div>
-          {isExpanded && (
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Filter size={16} />
-              {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-            </Button>
-          )}
-        </div>
-
-        {isExpanded && (
+        {isExpanded ? (
           <>
+            <div className="flex justify-between items-center mb-6 border-b-4 border-yellow-400 pb-2">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                  title="Recolher lista"
+                >
+                  <ChevronUp size={20} />
+                </button>
+                <h3 className="text-2xl text-yellow-400">
+                  Tarefas Existentes ({filteredTasks.length} de {tasks.length})
+                </h3>
+              </div>
+              <Button
+                onClick={() => setShowFilters(!showFilters)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Filter size={16} />
+                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+              </Button>
+            </div>
+
             {/* Seção de Filtros */}
             {showFilters && (
               <div className="bg-slate-800/30 border border-cyan-400/30 rounded p-4 mb-6">
@@ -359,6 +357,22 @@ export const TasksList = () => {
               </div>
             )}
           </>
+        ) : (
+          // Versão recolhida - apenas cabeçalho compacto
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                title="Expandir lista"
+              >
+                <ChevronDown size={20} />
+              </button>
+              <h3 className="text-lg text-yellow-400">
+                Tarefas ({filteredTasks.length} de {tasks.length})
+              </h3>
+            </div>
+          </div>
         )}
       </div>
 
