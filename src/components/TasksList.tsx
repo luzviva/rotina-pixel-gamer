@@ -34,7 +34,7 @@ export const TasksList = () => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
 
