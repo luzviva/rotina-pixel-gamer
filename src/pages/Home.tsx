@@ -46,9 +46,8 @@ const Home = () => {
         navigate('/novoperfil');
         return;
       }
-      // Se tem filhos, vai direto para o dashboard de pais
-      setUserType("parent");
-      setCurrentScreen("parent-dashboard");
+      // Se tem filhos, mantém na tela de PIN para escolher acesso
+      // A tela inicial sempre será a visão da criança após o PIN
     }
   };
 
