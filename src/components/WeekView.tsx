@@ -9,8 +9,9 @@ export const WeekView = ({ onDateSelect }: WeekViewProps) => {
 
   const dayTitleNames = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
   
-  // Simula a data de hoje como Terça, 5 de Agosto de 2025
-  const today = new Date(2025, 7, 5);
+  // Data atual real
+  const today = new Date();
+  const todayDayIndex = today.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
 
   const weekDates = Array.from({ length: 7 }, (_, i) => {
     const dayOffset = i - 3; // O botão do meio está em i=3
