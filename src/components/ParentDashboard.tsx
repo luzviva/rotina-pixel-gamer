@@ -5,12 +5,13 @@ import { TasksList } from "./TasksList";
 import { StoreItemsList } from "./StoreItemsList";
 import { PinChangeModal } from "./PinChangeModal";
 import { FeedbackForm } from "./FeedbackForm";
+import { DonationPage } from "./DonationPage";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Heart } from "lucide-react";
+import { Settings, Heart, Gift } from "lucide-react";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -24,7 +25,8 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     store: false,
     mission: false,
     pinChange: false,
-    feedback: false
+    feedback: false,
+    donation: false
   });
 
   const generateTaskInstances = (data: any) => {
@@ -357,6 +359,25 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
         >
           Criar Perfil
         </button>
+
+        {/* Botão Faça uma doação */}
+        <Dialog open={openDialogs.donation} onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, donation: open }))}>
+          <DialogTrigger asChild>
+            <button 
+              className="pixel-btn text-yellow-400 w-64 text-xl py-4 flex items-center justify-center gap-2" 
+              style={{ borderColor: 'hsl(var(--pixel-yellow))', color: 'hsl(var(--pixel-yellow))' }}
+            >
+              <Gift size={20} />
+              Faça uma doação!
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Apoie este projeto</DialogTitle>
+            </DialogHeader>
+            <DonationPage onClose={() => setOpenDialogs(prev => ({ ...prev, donation: false }))} />
+          </DialogContent>
+        </Dialog>
 
         {/* Botão Ajude-nos a melhorar */}
         <Dialog open={openDialogs.feedback} onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, feedback: open }))}>
