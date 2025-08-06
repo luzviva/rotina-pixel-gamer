@@ -65,10 +65,10 @@ const Shop = () => {
   
   // Get the first child as selected child (you may want to add child selection logic)
   useEffect(() => {
-    if (children.length > 0 && !selectedChild) {
+    if (children.length > 0) {
       setSelectedChild(children[0]);
     }
-  }, [children, selectedChild]);
+  }, [children]);
   
   const coinBalance = selectedChild?.coin_balance || 0;
 
@@ -135,8 +135,6 @@ const Shop = () => {
         description: `${selectedItem.name} foi comprado com sucesso!`,
       });
       
-      setShowModal(false);
-      setSelectedItem(null);
     } catch (error) {
       console.error('Erro ao realizar compra:', error);
       toast({
@@ -144,6 +142,9 @@ const Shop = () => {
         description: "Erro ao realizar a compra",
         variant: "destructive",
       });
+    } finally {
+      setShowModal(false);
+      setSelectedItem(null);
     }
   };
 
