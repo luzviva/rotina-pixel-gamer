@@ -164,16 +164,23 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
         points = 50; // Valor padrão para outros tipos de prêmio
       }
 
+      // Determinar o prêmio baseado no tipo
+      let prize = '';
+      if (data.prizeType === 'coins') {
+        prize = `${data.coinsAmount} moedas`;
+      } else if (data.prizeType === 'store-item') {
+        prize = data.storeItem || '';
+      } else {
+        prize = data.textDescription || '';
+      }
+
       const { error } = await supabase
         .from('special_missions')
         .insert({
           title: data.title,
-          description: `Execuções necessárias: ${data.executions}. Prêmio: ${
-            data.prizeType === 'coins' ? `${data.coinsAmount} moedas` :
-            data.prizeType === 'store-item' ? data.storeItem :
-            data.textDescription
-          }`,
+          description: `Execuções necessárias: ${data.executions}`,
           points,
+          prize,
           created_by: user.id,
           is_active: true,
         });

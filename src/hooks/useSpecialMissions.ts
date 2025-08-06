@@ -6,6 +6,7 @@ export interface SpecialMission {
   title: string;
   description: string | null;
   points: number;
+  prize: string | null;
   is_active: boolean;
   expires_at: string | null;
   created_by: string;

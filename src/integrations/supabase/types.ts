@@ -131,6 +131,7 @@ export type Database = {
           id: string
           is_active: boolean
           points: number
+          prize: string | null
           title: string
           updated_at: string
         }
@@ -142,6 +143,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           points?: number
+          prize?: string | null
           title: string
           updated_at?: string
         }
@@ -153,6 +155,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           points?: number
+          prize?: string | null
           title?: string
           updated_at?: string
         }

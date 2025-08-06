@@ -94,7 +94,7 @@ export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) 
             >
               <path d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.757-2.243-5-5-5zm0 2c1.654 0 3 1.346 3 3v1H9V7c0-1.654 1.346-3 3-3z"/>
             </svg>
-            <p className="text-sm">+{prizeAmount} Moedas!</p>
+            <p className="text-sm">{currentMission?.prize || `+${prizeAmount} Moedas!`}</p>
           </div>
         )}
       </div>
