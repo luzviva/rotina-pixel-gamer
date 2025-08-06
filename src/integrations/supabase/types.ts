@@ -14,7 +14,245 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      children: {
+        Row: {
+          avatar_url: string | null
+          birth_date: string | null
+          coin_balance: number
+          created_at: string
+          experience_points: number
+          gender: string | null
+          id: string
+          level: number
+          name: string
+          parent_id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          coin_balance?: number
+          created_at?: string
+          experience_points?: number
+          gender?: string | null
+          id?: string
+          level?: number
+          name: string
+          parent_id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_date?: string | null
+          coin_balance?: number
+          created_at?: string
+          experience_points?: number
+          gender?: string | null
+          id?: string
+          level?: number
+          name?: string
+          parent_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          user_type?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          child_id: string
+          id: string
+          price_paid: number
+          purchased_at: string
+          store_item_id: string
+        }
+        Insert: {
+          child_id: string
+          id?: string
+          price_paid: number
+          purchased_at?: string
+          store_item_id: string
+        }
+        Update: {
+          child_id?: string
+          id?: string
+          price_paid?: number
+          purchased_at?: string
+          store_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchases_store_item_id_fkey"
+            columns: ["store_item_id"]
+            isOneToOne: false
+            referencedRelation: "store_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_missions: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          points: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          points?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          points?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_items: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean
+          price: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          price: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          price?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          category: string
+          child_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          difficulty: string
+          due_date: string | null
+          id: string
+          is_completed: boolean
+          points: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          child_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          difficulty?: string
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean
+          points?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          child_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          difficulty?: string
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean
+          points?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
