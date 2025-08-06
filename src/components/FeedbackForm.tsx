@@ -4,6 +4,7 @@ import { Textarea } from "./ui/textarea";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Phone, MessageCircle } from "lucide-react";
 
@@ -33,9 +34,34 @@ export const FeedbackForm = ({ onClose }: FeedbackFormProps) => {
     setIsSubmitting(true);
 
     try {
-      // Aqui você poderia implementar o envio para um banco de dados ou API
-      // Por enquanto, vamos simular o envio
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não encontrado. Faça login para enviar sugestões.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('feedback_suggestions')
+        .insert({
+          name: name.trim() || null,
+          email: email.trim() || null,
+          suggestion: suggestion.trim(),
+          user_id: user.id,
+        });
+
+      if (error) {
+        console.error('Erro ao salvar feedback:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao enviar sugestão: " + error.message,
+          variant: "destructive",
+        });
+        return;
+      }
       
       toast({
         title: "Sucesso!",
@@ -48,6 +74,7 @@ export const FeedbackForm = ({ onClose }: FeedbackFormProps) => {
       setSuggestion("");
       onClose();
     } catch (error) {
+      console.error('Erro ao enviar feedback:', error);
       toast({
         title: "Erro",
         description: "Erro ao enviar sugestão. Tente novamente.",
