@@ -9,34 +9,12 @@ import { WeekView } from "../components/WeekView";
 import { FeedbackModal } from "../components/FeedbackModal";
 import { SpecialMission } from "../components/SpecialMission";
 import { Settings, ShoppingCart } from "lucide-react";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  reward: number;
-  completed: boolean;
-}
+import { useTasks } from "../hooks/useTasks";
 
 const Home = () => {
   const navigate = useNavigate();
   const [coinBalance, setCoinBalance] = useState(125);
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      title: "Arrumar a cama",
-      description: "Deixar o quarto pronto para a aventura do dia!",
-      reward: 5,
-      completed: true
-    },
-    {
-      id: "2", 
-      title: "Ler por 15 minutos",
-      description: "Explorar um novo mundo nos livros.",
-      reward: 10,
-      completed: false
-    }
-  ]);
+  const { tasks: allTasks, loading, error, updateTaskCompletion, getTasksForDate } = useTasks();
 
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
@@ -48,8 +26,10 @@ const Home = () => {
   const dayTitleNames = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
   const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-  const completedTasks = tasks.filter(task => task.completed).length;
-  const totalTasks = tasks.length;
+  // Pega as tarefas para a data selecionada
+  const tasksForSelectedDate = getTasksForDate(selectedDate);
+  const completedTasks = tasksForSelectedDate.filter(task => task.is_completed).length;
+  const totalTasks = tasksForSelectedDate.length;
 
   useEffect(() => {
     // Animação de entrada
@@ -61,29 +41,28 @@ const Home = () => {
     setShowFeedback(true);
   };
 
-  const handleTaskToggle = (taskId: string, completed: boolean) => {
-    setTasks(prevTasks => {
-      return prevTasks.map(task => {
-        if (task.id === taskId) {
-          if (completed) {
-            // Marca como completa e adiciona moedas
-            setCoinBalance(prev => prev + task.reward);
-            showFeedbackMessage(`+${task.reward} Moedas!`);
-            return { ...task, completed: true };
-          } else {
-            // Verifica se pode desmarcar
-            if (coinBalance >= task.reward) {
-              setCoinBalance(prev => prev - task.reward);
-              return { ...task, completed: false };
-            } else {
-              showFeedbackMessage('Moedas já gastas!');
-              return task; // Não altera o estado
-            }
-          }
+  const handleTaskToggle = async (taskId: string, completed: boolean) => {
+    const task = allTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    if (completed) {
+      // Marca como completa e adiciona moedas
+      const success = await updateTaskCompletion(taskId, true);
+      if (success) {
+        setCoinBalance(prev => prev + task.points);
+        showFeedbackMessage(`+${task.points} Moedas!`);
+      }
+    } else {
+      // Verifica se pode desmarcar
+      if (coinBalance >= task.points) {
+        const success = await updateTaskCompletion(taskId, false);
+        if (success) {
+          setCoinBalance(prev => prev - task.points);
         }
-        return task;
-      });
-    });
+      } else {
+        showFeedbackMessage('Moedas já gastas!');
+      }
+    }
   };
 
   const handleDateSelect = (date: Date, todaySelected: boolean) => {
@@ -178,17 +157,27 @@ const Home = () => {
           </div>
 
           <div className="space-y-6">
-            {tasks.map(task => (
-              <QuestCard
-                key={task.id}
-                id={task.id}
-                title={task.title}
-                description={task.description}
-                reward={task.reward}
-                completed={task.completed}
-                onToggle={(completed) => handleTaskToggle(task.id, completed)}
-              />
-            ))}
+            {loading ? (
+              <div className="text-center text-cyan-400">Carregando tarefas...</div>
+            ) : error ? (
+              <div className="text-center text-red-400">Erro: {error}</div>
+            ) : tasksForSelectedDate.length === 0 ? (
+              <div className="text-center text-cyan-400/80 p-6 text-lg">
+                Nenhuma tarefa para este dia! Hora de brincar!
+              </div>
+            ) : (
+              tasksForSelectedDate.map(task => (
+                <QuestCard
+                  key={task.id}
+                  id={task.id}
+                  title={task.title}
+                  description={task.description || ""}
+                  reward={task.points}
+                  completed={task.is_completed}
+                  onToggle={(completed) => handleTaskToggle(task.id, completed)}
+                />
+              ))
+            )}
           </div>
         </main>
       </div>
