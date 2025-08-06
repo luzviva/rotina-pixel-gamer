@@ -20,6 +20,73 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     mission: false
   });
 
+  const generateTaskInstances = (data: any) => {
+    const instances = [];
+    
+    const baseTaskData = {
+      title: data.title,
+      description: data.description,
+      points: data.reward,
+      child_id: data.child,
+      frequency: data.frequency,
+      time_start: data.timeStart || null,
+      time_end: data.timeMode === 'start-end' ? data.timeEnd : null,
+      time_mode: data.timeMode,
+      duration_minutes: data.timeMode === 'start-duration' ? data.duration : null,
+    };
+
+    if (data.frequency === 'UNICA') {
+      // Tarefa única: criar apenas uma instância
+      instances.push({
+        ...baseTaskData,
+        due_date: data.specificDate,
+        date_start: data.specificDate,
+        date_end: data.specificDate,
+      });
+    } else if (data.frequency === 'DIARIA') {
+      // Tarefa diária: criar uma instância para cada dia
+      const startDate = new Date(data.dateStart);
+      const endDate = new Date(data.dateEnd);
+      
+      for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        instances.push({
+          ...baseTaskData,
+          due_date: dateStr,
+          date_start: data.dateStart,
+          date_end: data.dateEnd,
+        });
+      }
+    } else if (data.frequency === 'SEMANAL') {
+      // Tarefa semanal: criar uma instância para cada dia da semana selecionado
+      const startDate = new Date(data.dateStart);
+      const endDate = new Date(data.dateEnd);
+      const weekdaysMap = {
+        'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 
+        'thu': 4, 'fri': 5, 'sat': 6
+      };
+      
+      const selectedWeekdays = data.weekdays?.map((day: string) => weekdaysMap[day as keyof typeof weekdaysMap]) || [];
+      
+      for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+        const dayOfWeek = currentDate.getDay();
+        
+        if (selectedWeekdays.includes(dayOfWeek)) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          instances.push({
+            ...baseTaskData,
+            due_date: dateStr,
+            date_start: data.dateStart,
+            date_end: data.dateEnd,
+            weekdays: data.weekdays,
+          });
+        }
+      }
+    }
+    
+    return instances;
+  };
+
   const handleTaskSubmit = async (data: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -32,27 +99,18 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
         return;
       }
 
-      // Prepare task data for database
-      const taskData = {
-        title: data.title,
-        description: data.description,
-        points: data.reward,
-        child_id: data.child,
+      // Gerar todas as instâncias da tarefa
+      const taskInstances = generateTaskInstances(data);
+      
+      // Adicionar created_by a cada instância
+      const tasksToInsert = taskInstances.map(instance => ({
+        ...instance,
         created_by: user.id,
-        frequency: data.frequency,
-        date_start: data.dateStart || null,
-        date_end: data.dateEnd || null,
-        due_date: data.specificDate || null,
-        weekdays: data.weekdays || null,
-        time_start: data.timeStart || null,
-        time_end: data.timeMode === 'start-end' ? data.timeEnd : null,
-        time_mode: data.timeMode,
-        duration_minutes: data.timeMode === 'start-duration' ? data.duration : null,
-      };
+      }));
 
       const { error } = await supabase
         .from('tasks')
-        .insert([taskData]);
+        .insert(tasksToInsert);
 
       if (error) {
         console.error('Erro ao criar tarefa:', error);
@@ -66,7 +124,7 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
 
       toast({
         title: "Sucesso",
-        description: "Tarefa criada com sucesso!",
+        description: `Tarefa criada com sucesso! ${tasksToInsert.length} instância(s) criada(s).`,
       });
 
       setOpenDialogs(prev => ({ ...prev, task: false }));
