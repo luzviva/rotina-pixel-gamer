@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PinScreenProps {
   onPinSuccess: (userType: 'child' | 'parent') => void;
@@ -7,6 +8,24 @@ interface PinScreenProps {
 export const PinScreen = ({ onPinSuccess }: PinScreenProps) => {
   const [currentPin, setCurrentPin] = useState('');
   const [error, setError] = useState('');
+  const [userProfile, setUserProfile] = useState<{ parent_pin: string | null } | null>(null);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('parent_pin')
+          .eq('user_id', user.id)
+          .single();
+        
+        setUserProfile(profile);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   const enterPin = (digit: string) => {
     if (currentPin.length < 4) {
@@ -22,16 +41,31 @@ export const PinScreen = ({ onPinSuccess }: PinScreenProps) => {
 
   const checkPin = () => {
     // PIN para criança: 1234
-    // PIN para pais: 9999
     if (currentPin === '1234') {
       onPinSuccess('child');
       clearPin();
-    } else if (currentPin === '9999') {
-      onPinSuccess('parent');
-      clearPin();
+      return;
+    }
+
+    // PIN para pais: verificar PIN personalizado ou padrão '9999'
+    if (userProfile?.parent_pin) {
+      // Se o usuário tem PIN personalizado, só aceitar o PIN personalizado
+      if (currentPin === userProfile.parent_pin) {
+        onPinSuccess('parent');
+        clearPin();
+      } else {
+        setError('PIN incorreto!');
+        clearPin();
+      }
     } else {
-      setError('PIN incorreto!');
-      clearPin();
+      // Se não tem PIN personalizado, aceitar apenas '9999'
+      if (currentPin === '9999') {
+        onPinSuccess('parent');
+        clearPin();
+      } else {
+        setError('PIN incorreto!');
+        clearPin();
+      }
     }
   };
 

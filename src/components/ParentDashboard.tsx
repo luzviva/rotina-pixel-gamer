@@ -3,11 +3,13 @@ import { StoreItemCreationForm } from "./StoreItemCreationForm";
 import { SpecialMissionCreationForm } from "./SpecialMissionCreationForm";
 import { TasksList } from "./TasksList";
 import { StoreItemsList } from "./StoreItemsList";
+import { PinChangeModal } from "./PinChangeModal";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Settings } from "lucide-react";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -19,7 +21,8 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
   const [openDialogs, setOpenDialogs] = useState({
     task: false,
     store: false,
-    mission: false
+    mission: false,
+    pinChange: false
   });
 
   const generateTaskInstances = (data: any) => {
@@ -353,6 +356,16 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
           Criar Perfil
         </button>
 
+        {/* Botão Alterar PIN */}
+        <button 
+          onClick={() => setOpenDialogs(prev => ({ ...prev, pinChange: true }))} 
+          className="pixel-btn text-red-400 w-64 text-xl py-4 flex items-center justify-center gap-2" 
+          style={{ borderColor: 'hsl(var(--pixel-red))', color: 'hsl(var(--pixel-red))' }}
+        >
+          <Settings size={20} />
+          Alterar PIN
+        </button>
+
         {/* Botão Sair */}
         <button 
           onClick={onLogout} 
@@ -372,6 +385,12 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
       <div className="mt-8 max-w-6xl mx-auto px-4">
         <StoreItemsList />
       </div>
+
+      {/* Modal para alterar PIN */}
+      <PinChangeModal 
+        open={openDialogs.pinChange} 
+        onOpenChange={(open) => setOpenDialogs(prev => ({ ...prev, pinChange: open }))} 
+      />
     </div>
   );
 };
