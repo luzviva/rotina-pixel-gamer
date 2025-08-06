@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChildren } from "@/hooks/useChildren";
-import { Trash2, Edit, Filter } from "lucide-react";
+import { Trash2, Edit, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { TaskCreationForm } from "./TaskCreationForm";
 import { Button } from "./ui/button";
@@ -30,6 +30,7 @@ export const TasksList = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   // Estados dos filtros
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -194,155 +195,170 @@ export const TasksList = () => {
     <>
       <div className="pixel-border p-6 mt-8">
         <div className="flex justify-between items-center mb-6 border-b-4 border-yellow-400 pb-2">
-          <h3 className="text-2xl text-yellow-400">
-            Tarefas Existentes ({filteredTasks.length} de {tasks.length})
-          </h3>
-          <Button
-            onClick={() => setShowFilters(!showFilters)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Filter size={16} />
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </Button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-yellow-400 hover:text-yellow-300 transition-colors"
+              title={isExpanded ? "Recolher lista" : "Expandir lista"}
+            >
+              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </button>
+            <h3 className="text-2xl text-yellow-400">
+              Tarefas Existentes ({filteredTasks.length} de {tasks.length})
+            </h3>
+          </div>
+          {isExpanded && (
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Filter size={16} />
+              {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+            </Button>
+          )}
         </div>
 
-        {/* Seção de Filtros */}
-        {showFilters && (
-          <div className="bg-slate-800/30 border border-cyan-400/30 rounded p-4 mb-6">
-            <h4 className="text-lg text-cyan-400 mb-4">Filtros</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Filtro por Status */}
-              <div>
-                <label className="text-white/80 block mb-2">Status</label>
-                <Select value={statusFilter} onValueChange={(value: 'all' | 'pending' | 'completed') => setStatusFilter(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="pending">Pendentes</SelectItem>
-                    <SelectItem value="completed">Concluídas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        {isExpanded && (
+          <>
+            {/* Seção de Filtros */}
+            {showFilters && (
+              <div className="bg-slate-800/30 border border-cyan-400/30 rounded p-4 mb-6">
+                <h4 className="text-lg text-cyan-400 mb-4">Filtros</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Filtro por Status */}
+                  <div>
+                    <label className="text-white/80 block mb-2">Status</label>
+                    <Select value={statusFilter} onValueChange={(value: 'all' | 'pending' | 'completed') => setStatusFilter(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas</SelectItem>
+                        <SelectItem value="pending">Pendentes</SelectItem>
+                        <SelectItem value="completed">Concluídas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Filtro por Criança */}
-              <div>
-                <label className="text-white/80 block mb-2">Criança</label>
-                <Select value={childFilter} onValueChange={setChildFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a criança" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as crianças</SelectItem>
-                    {children.map((child) => (
-                      <SelectItem key={child.id} value={child.id}>
-                        {child.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  {/* Filtro por Criança */}
+                  <div>
+                    <label className="text-white/80 block mb-2">Criança</label>
+                    <Select value={childFilter} onValueChange={setChildFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a criança" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as crianças</SelectItem>
+                        {children.map((child) => (
+                          <SelectItem key={child.id} value={child.id}>
+                            {child.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Filtro por Data */}
-              <div>
-                <label className="text-white/80 block mb-2">Data</label>
-                <Input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="bg-slate-800 border-cyan-400/30"
-                />
-              </div>
-            </div>
-
-            {/* Botão para limpar filtros */}
-            <div className="mt-4">
-              <Button 
-                onClick={clearFilters} 
-                variant="outline" 
-                size="sm"
-                className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-400/10"
-              >
-                Limpar Filtros
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        {tasks.length === 0 ? (
-          <p className="text-cyan-400/80 text-center py-8">
-            Nenhuma tarefa criada ainda. Crie sua primeira tarefa usando o botão acima!
-          </p>
-        ) : filteredTasks.length === 0 ? (
-          <p className="text-cyan-400/80 text-center py-8">
-            Nenhuma tarefa encontrada com os filtros selecionados.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {filteredTasks.map((task) => (
-              <div key={task.id} className="bg-slate-800/50 border-2 border-cyan-400/30 p-4 rounded">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-xl text-cyan-400 font-bold">{task.title}</h4>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditTask(task)}
-                      className="text-yellow-400 hover:text-yellow-300 transition-colors"
-                      title="Editar tarefa"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors"
-                      title="Excluir tarefa"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                  {/* Filtro por Data */}
+                  <div>
+                    <label className="text-white/80 block mb-2">Data</label>
+                    <Input
+                      type="date"
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      className="bg-slate-800 border-cyan-400/30"
+                    />
                   </div>
                 </div>
-                
-                {task.description && (
-                  <p className="text-white/80 mb-3">{task.description}</p>
-                )}
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-yellow-400">Recompensa:</span>
-                    <p className="text-white">{task.points} moedas</p>
-                  </div>
-                  <div>
-                    <span className="text-yellow-400">Criança:</span>
-                    <p className="text-white">{getChildName(task.child_id)}</p>
-                  </div>
-                  <div>
-                    <span className="text-yellow-400">Data:</span>
-                    <p className="text-white">{formatDate(task.due_date)}</p>
-                  </div>
-                  <div>
-                    <span className="text-yellow-400">Horário:</span>
-                    <p className="text-white">
-                      {task.time_start ? `${formatTime(task.time_start)} - ${formatTime(task.time_end)}` : '-'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="mt-2 flex justify-between items-center">
-                  <span className={`text-sm px-2 py-1 rounded ${
-                    task.is_completed 
-                      ? 'bg-green-600/20 text-green-400 border border-green-400/30' 
-                      : 'bg-orange-600/20 text-orange-400 border border-orange-400/30'
-                  }`}>
-                    {task.is_completed ? 'Concluída' : 'Pendente'}
-                  </span>
-                  <span className="text-xs text-white/60">
-                    Frequência: {task.frequency}
-                  </span>
+
+                {/* Botão para limpar filtros */}
+                <div className="mt-4">
+                  <Button 
+                    onClick={clearFilters} 
+                    variant="outline" 
+                    size="sm"
+                    className="text-yellow-400 border-yellow-400/30 hover:bg-yellow-400/10"
+                  >
+                    Limpar Filtros
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+            
+            {tasks.length === 0 ? (
+              <p className="text-cyan-400/80 text-center py-8">
+                Nenhuma tarefa criada ainda. Crie sua primeira tarefa usando o botão acima!
+              </p>
+            ) : filteredTasks.length === 0 ? (
+              <p className="text-cyan-400/80 text-center py-8">
+                Nenhuma tarefa encontrada com os filtros selecionados.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {filteredTasks.map((task) => (
+                  <div key={task.id} className="bg-slate-800/50 border-2 border-cyan-400/30 p-4 rounded">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="text-xl text-cyan-400 font-bold">{task.title}</h4>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditTask(task)}
+                          className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                          title="Editar tarefa"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Excluir tarefa"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {task.description && (
+                      <p className="text-white/80 mb-3">{task.description}</p>
+                    )}
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-yellow-400">Recompensa:</span>
+                        <p className="text-white">{task.points} moedas</p>
+                      </div>
+                      <div>
+                        <span className="text-yellow-400">Criança:</span>
+                        <p className="text-white">{getChildName(task.child_id)}</p>
+                      </div>
+                      <div>
+                        <span className="text-yellow-400">Data:</span>
+                        <p className="text-white">{formatDate(task.due_date)}</p>
+                      </div>
+                      <div>
+                        <span className="text-yellow-400">Horário:</span>
+                        <p className="text-white">
+                          {task.time_start ? `${formatTime(task.time_start)} - ${formatTime(task.time_end)}` : '-'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 flex justify-between items-center">
+                      <span className={`text-sm px-2 py-1 rounded ${
+                        task.is_completed 
+                          ? 'bg-green-600/20 text-green-400 border border-green-400/30' 
+                          : 'bg-orange-600/20 text-orange-400 border border-orange-400/30'
+                      }`}>
+                        {task.is_completed ? 'Concluída' : 'Pendente'}
+                      </span>
+                      <span className="text-xs text-white/60">
+                        Frequência: {task.frequency}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
