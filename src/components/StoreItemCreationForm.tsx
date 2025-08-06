@@ -10,14 +10,15 @@ interface StoreItemFormData {
 
 interface StoreItemCreationFormProps {
   onSubmit: (data: StoreItemFormData) => void;
+  initialData?: Partial<StoreItemFormData>;
 }
 
-export const StoreItemCreationForm = ({ onSubmit }: StoreItemCreationFormProps) => {
+export const StoreItemCreationForm = ({ onSubmit, initialData }: StoreItemCreationFormProps) => {
   const [formData, setFormData] = useState<StoreItemFormData>({
-    name: 'Pizza no Sábado',
-    description: 'Vamos pedir uma pizza grande do sabor que você escolher!',
-    cost: 300,
-    stock: undefined,
+    name: initialData?.name || 'Pizza no Sábado',
+    description: initialData?.description || 'Vamos pedir uma pizza grande do sabor que você escolher!',
+    cost: initialData?.cost || 300,
+    stock: initialData?.stock || undefined,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
