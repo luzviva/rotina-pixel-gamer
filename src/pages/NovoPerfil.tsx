@@ -1,13 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const NovoPerfil = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [avatarMode, setAvatarMode] = useState<'predefined' | 'draw'>('predefined');
   const [selectedAvatar, setSelectedAvatar] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [pencilSize, setPencilSize] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Form data
+  const [childName, setChildName] = useState('');
+  const [childGender, setChildGender] = useState('Menino');
+  const [childBirthdate, setChildBirthdate] = useState('');
   
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const pixelCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -95,8 +105,55 @@ const NovoPerfil = () => {
     }
   };
 
-  const handleSaveProfile = () => {
-    alert('Perfil Salvo!');
+  const handleSaveProfile = async () => {
+    if (!user) {
+      toast.error('Você precisa estar logado para salvar o perfil');
+      return;
+    }
+
+    if (!childName.trim()) {
+      toast.error('Por favor, digite o nome da criança');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Prepare avatar URL
+      let avatarUrl = null;
+      
+      if (avatarMode === 'predefined' && selectedAvatar) {
+        avatarUrl = selectedAvatar;
+      } else if (avatarMode === 'draw' && previewCanvasRef.current) {
+        // Convert canvas to data URL for custom drawn avatar
+        avatarUrl = previewCanvasRef.current.toDataURL();
+      }
+
+      // Save to database
+      const { data, error } = await supabase
+        .from('children')
+        .insert({
+          name: childName.trim(),
+          gender: childGender,
+          birth_date: childBirthdate || null,
+          avatar_url: avatarUrl,
+          parent_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Perfil criado com sucesso!');
+      navigate('/');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('Erro ao salvar perfil. Tente novamente.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -125,6 +182,8 @@ const NovoPerfil = () => {
                   <input 
                     type="text" 
                     id="child-name" 
+                    value={childName}
+                    onChange={(e) => setChildName(e.target.value)}
                     className="w-full bg-black/40 border-4 border-cyan-400 p-2 text-white text-lg focus:outline-none focus:border-yellow-400" 
                     placeholder="Aventureiro" 
                   />
@@ -134,6 +193,8 @@ const NovoPerfil = () => {
                     <label htmlFor="child-gender" className="text-lg block mb-1">Gênero</label>
                     <select 
                       id="child-gender" 
+                      value={childGender}
+                      onChange={(e) => setChildGender(e.target.value)}
                       className="w-full bg-black/40 border-4 border-cyan-400 p-2 text-white text-lg focus:outline-none focus:border-yellow-400 appearance-none"
                       style={{
                         backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="%2300ffff"><polygon points="0,0 20,0 10,10"/></svg>')`,
@@ -153,6 +214,8 @@ const NovoPerfil = () => {
                     <input 
                       type="date" 
                       id="child-birthdate" 
+                      value={childBirthdate}
+                      onChange={(e) => setChildBirthdate(e.target.value)}
                       className="w-full bg-black/40 border-4 border-cyan-400 p-2 text-white text-lg focus:outline-none focus:border-yellow-400"
                       style={{ colorScheme: 'dark' }}
                     />
@@ -301,8 +364,9 @@ const NovoPerfil = () => {
               className="pixel-btn w-full text-green-400"
               style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}
               onClick={handleSaveProfile}
+              disabled={isSaving}
             >
-              Salvar Perfil
+              {isSaving ? 'Salvando...' : 'Salvar Perfil'}
             </button>
           </div>
         </main>
