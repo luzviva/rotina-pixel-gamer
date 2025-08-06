@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Heart, Gift } from "lucide-react";
+import { Settings, Heart, Gift, ArrowLeft } from "lucide-react";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -276,7 +276,13 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
 
   return (
     <div>
-      <header className="pixel-border p-4 mb-8 text-center">
+      <header className="pixel-border p-4 mb-8 text-center relative">
+        <button 
+          onClick={() => navigate('/')} 
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 hover:opacity-70 transition-opacity"
+        >
+          <ArrowLeft size={24} className="text-cyan-400" />
+        </button>
         <h1 className="text-3xl text-cyan-400">Painel dos Pais</h1>
       </header>
 
@@ -383,14 +389,6 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
           Alterar PIN
         </button>
 
-        {/* Botão Sair */}
-        <button 
-          onClick={onLogout} 
-          className="pixel-btn text-red-400 w-64 text-xl py-4" 
-          style={{ borderColor: 'hsl(var(--pixel-red))', color: 'hsl(var(--pixel-red))' }}
-        >
-          Sair
-        </button>
       </main>
 
       {/* Lista de Tarefas Existentes */}
