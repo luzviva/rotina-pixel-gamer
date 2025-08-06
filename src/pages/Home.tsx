@@ -219,6 +219,10 @@ const Home = () => {
                   description={task.description || ""}
                   reward={task.points}
                   completed={task.is_completed}
+                  timeStart={task.time_start}
+                  timeEnd={task.time_end}
+                  timeMode={task.time_mode}
+                  durationMinutes={task.duration_minutes}
                   onToggle={(completed) => handleTaskToggle(task.id, completed)}
                 />
               ))

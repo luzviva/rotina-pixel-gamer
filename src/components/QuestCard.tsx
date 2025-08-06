@@ -7,6 +7,10 @@ interface QuestCardProps {
   description: string;
   reward: number;
   completed: boolean;
+  timeStart?: string | null;
+  timeEnd?: string | null;
+  timeMode?: 'start-end' | 'start-duration';
+  durationMinutes?: number | null;
   onToggle: (completed: boolean) => void;
 }
 
@@ -15,9 +19,28 @@ export const QuestCard = ({
   title, 
   description, 
   reward, 
-  completed, 
+  completed,
+  timeStart,
+  timeEnd,
+  timeMode,
+  durationMinutes,
   onToggle 
 }: QuestCardProps) => {
+  const formatTime = (time: string) => {
+    return time.substring(0, 5); // Remove os segundos, fica HH:MM
+  };
+
+  const getTimeDisplay = () => {
+    if (!timeStart) return null;
+    
+    if (timeMode === 'start-duration' && durationMinutes) {
+      return `${formatTime(timeStart)} (${durationMinutes}min)`;
+    } else if (timeMode === 'start-end' && timeEnd) {
+      return `${formatTime(timeStart)} - ${formatTime(timeEnd)}`;
+    } else {
+      return formatTime(timeStart);
+    }
+  };
   return (
     <div 
       id={`quest-card-${id}`} 
@@ -35,6 +58,11 @@ export const QuestCard = ({
         <p className="text-base text-cyan-300">
           {description}
         </p>
+        {getTimeDisplay() && (
+          <p className="text-sm text-yellow-300 mt-1">
+            🕒 {getTimeDisplay()}
+          </p>
+        )}
       </div>
       <div className="text-2xl text-yellow-400 flex items-center gap-2">
         +{reward}
