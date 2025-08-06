@@ -156,6 +156,35 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
         return;
       }
 
+      let imageUrl = null;
+
+      // Upload image if provided
+      if (data.image) {
+        const fileExt = data.image.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('store-items')
+          .upload(fileName, data.image);
+
+        if (uploadError) {
+          console.error('Erro ao fazer upload da imagem:', uploadError);
+          toast({
+            title: "Erro",
+            description: "Erro ao fazer upload da imagem: " + uploadError.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('store-items')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from('store_items')
         .insert({
@@ -165,6 +194,7 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
           category: 'general',
           is_available: true,
           created_by: user.id,
+          image_url: imageUrl,
         });
 
       if (error) {

@@ -74,32 +74,32 @@ const Shop = () => {
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
 
   // Fetch store items from database
+  const fetchStoreItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('store_items')
+        .select('*')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const items: StoreItem[] = data.map((item, index) => ({
+        id: index + 1,
+        name: item.title,
+        description: item.description || '',
+        cost: item.price,
+        image: item.image_url || `https://placehold.co/300x200/e94560/ffffff?text=${encodeURIComponent(item.title)}`,
+        canAfford: coinBalance >= item.price
+      }));
+
+      setStoreItems(items);
+    } catch (error) {
+      console.error('Erro ao carregar itens da loja:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchStoreItems = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('store_items')
-          .select('*')
-          .eq('is_available', true)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        const items: StoreItem[] = data.map((item, index) => ({
-          id: index + 1,
-          name: item.title,
-          description: item.description || '',
-          cost: item.price,
-          image: item.image_url || `https://placehold.co/300x200/e94560/ffffff?text=${encodeURIComponent(item.title)}`,
-          canAfford: coinBalance >= item.price
-        }));
-
-        setStoreItems(items);
-      } catch (error) {
-        console.error('Erro ao carregar itens da loja:', error);
-      }
-    };
-
     fetchStoreItems();
   }, [coinBalance]);
 
