@@ -8,15 +8,24 @@ import { QuestCard } from "../components/QuestCard";
 import { WeekView } from "../components/WeekView";
 import { FeedbackModal } from "../components/FeedbackModal";
 import { SpecialMission } from "../components/SpecialMission";
-import { Settings, ShoppingCart } from "lucide-react";
+import { Settings, ShoppingCart, LogOut } from "lucide-react";
 import { useTasks } from "../hooks/useTasks";
 import { useChildren } from "../hooks/useChildren";
+import { useAuth } from "../hooks/useAuth";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { children, loading: childrenLoading, updateChildCoinBalance } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const { tasks: allTasks, loading: tasksLoading, error, updateTaskCompletion, getTasksForDate } = useTasks(selectedChildId || undefined);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
@@ -114,6 +123,15 @@ const Home = () => {
     }
   };
 
+  // Se ainda estiver carregando auth, mostra loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-cyan-400">Carregando...</div>
+      </div>
+    );
+  }
+
   return (
     <div className={`p-4 md:p-8 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
       <div className="max-w-4xl mx-auto">
@@ -153,6 +171,14 @@ const Home = () => {
               onClick={handleSettingsClick}
             >
               <Settings className="w-6 h-6" />
+            </PixelButton>
+
+            <PixelButton 
+              className="text-sm p-2 flex items-center"
+              aria-label="Sair"
+              onClick={signOut}
+            >
+              <LogOut className="w-6 h-6" />
             </PixelButton>
           </div>
         </header>
