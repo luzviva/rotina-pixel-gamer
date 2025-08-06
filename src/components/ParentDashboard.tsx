@@ -138,10 +138,59 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     }
   };
 
-  const handleStoreItemSubmit = (data: any) => {
-    console.log('Novo item da loja:', data);
-    // Aqui implementaria a lógica para salvar o item da loja
-    setOpenDialogs(prev => ({ ...prev, store: false }));
+  const handleStoreItemSubmit = async (data: {
+    name: string;
+    description: string;
+    cost: number;
+    stock?: number;
+    image?: File;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('store_items')
+        .insert({
+          title: data.name,
+          description: data.description,
+          price: data.cost,
+          category: 'general',
+          is_available: true,
+          created_by: user.id,
+        });
+
+      if (error) {
+        console.error('Erro ao criar item da loja:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao criar item da loja: " + error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Item da loja criado com sucesso!",
+      });
+
+      setOpenDialogs(prev => ({ ...prev, store: false }));
+    } catch (error) {
+      console.error('Erro ao criar item da loja:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar item da loja",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSpecialMissionSubmit = async (data: any) => {

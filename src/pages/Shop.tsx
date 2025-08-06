@@ -71,41 +71,47 @@ const Shop = () => {
   }, [children]);
   
   const coinBalance = selectedChild?.coin_balance || 0;
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
 
-  const storeItems: StoreItem[] = [
-    {
-      id: 1,
-      name: "1h de Videogame",
-      description: "Uma hora extra para jogar seu jogo favorito no final de semana.",
-      cost: 100,
-      image: "https://placehold.co/300x200/e94560/ffffff?text=1h+de+Videogame",
-      canAfford: coinBalance >= 100
-    },
-    {
-      id: 2,
-      name: "Passeio no Parque",
-      description: "Um passeio especial com direito a sorvete.",
-      cost: 250,
-      image: "https://placehold.co/300x200/0f3460/ffffff?text=Passeio+no+Parque",
-      canAfford: coinBalance >= 250
-    },
-    {
-      id: 3,
-      name: "Noite da Pizza",
-      description: "Escolha o sabor da pizza para o jantar de sábado!",
-      cost: 120,
-      image: "https://placehold.co/300x200/39FF14/000000?text=Pizza!",
-      canAfford: coinBalance >= 120
-    },
-    {
-      id: 4,
-      name: "Caixa de LEGO",
-      description: "Uma caixa nova de LEGO do seu tema preferido.",
-      cost: 500,
-      image: "https://placehold.co/300x200/ffff00/000000?text=LEGO",
-      canAfford: coinBalance >= 500
-    }
-  ];
+  // Fetch store items from database
+  useEffect(() => {
+    const fetchStoreItems = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('store_items')
+          .select('*')
+          .eq('is_available', true)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const items: StoreItem[] = data.map((item, index) => ({
+          id: index + 1,
+          name: item.title,
+          description: item.description || '',
+          cost: item.price,
+          image: item.image_url || `https://placehold.co/300x200/e94560/ffffff?text=${encodeURIComponent(item.title)}`,
+          canAfford: coinBalance >= item.price
+        }));
+
+        setStoreItems(items);
+      } catch (error) {
+        console.error('Erro ao carregar itens da loja:', error);
+      }
+    };
+
+    fetchStoreItems();
+  }, [coinBalance]);
+
+  // Update canAfford when coin balance changes
+  useEffect(() => {
+    setStoreItems(prevItems => 
+      prevItems.map(item => ({
+        ...item,
+        canAfford: coinBalance >= item.cost
+      }))
+    );
+  }, [coinBalance]);
 
   const handlePurchaseClick = (item: StoreItem) => {
     if (item.canAfford) {
