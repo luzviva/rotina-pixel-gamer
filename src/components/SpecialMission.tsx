@@ -56,7 +56,7 @@ export const SpecialMission = ({ onComplete, onProgress }: SpecialMissionProps) 
             onClick={handleProgressClick}
             className="text-xl p-2 h-12 w-24"
           >
-            +1 Copo
+            +1
           </PixelButton>
         )}
         
