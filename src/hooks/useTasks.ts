@@ -104,33 +104,11 @@ export const useTasks = (childId?: string) => {
 
   const getTasksForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
     
     return tasks.filter(task => {
-      // Tarefas únicas com data específica
-      if (task.frequency === 'UNICA' && task.due_date) {
-        return task.due_date === dateString;
-      }
-      
-      // Tarefas diárias
-      if (task.frequency === 'DIARIA') {
-        if (task.date_start && task.date_end) {
-          return dateString >= task.date_start && dateString <= task.date_end;
-        }
-        return true; // Se não tem range de datas, aparece todos os dias
-      }
-      
-      // Tarefas semanais
-      if (task.frequency === 'SEMANAL' && task.weekdays) {
-        return task.weekdays.includes(dayOfWeek);
-      }
-      
-      // Tarefas com datas específicas
-      if (task.frequency === 'DATAS_ESPECIFICAS' && task.specific_dates) {
-        return task.specific_dates.includes(dateString);
-      }
-      
-      return false;
+      // Agora que criamos instâncias individuais com due_date,
+      // basta filtrar pelo due_date que corresponde à data selecionada
+      return task.due_date === dateString;
     });
   };
 
