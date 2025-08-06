@@ -1,13 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 const NovoPerfil = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [avatarMode, setAvatarMode] = useState<'predefined' | 'draw'>('predefined');
   const [selectedAvatar, setSelectedAvatar] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState('#000000');
@@ -100,60 +95,8 @@ const NovoPerfil = () => {
     }
   };
 
-  const [formData, setFormData] = useState({
-    name: '',
-    gender: 'Menino',
-    birthDate: ''
-  });
-
-  const handleSaveProfile = async () => {
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Usuário não autenticado",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!formData.name.trim()) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Por favor, preencha o nome da criança",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('children')
-        .insert([
-          {
-            parent_id: user.id,
-            name: formData.name.trim(),
-            gender: formData.gender,
-            birth_date: formData.birthDate || null,
-            avatar_url: selectedAvatar || null
-          }
-        ]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Perfil criado!",
-        description: `Perfil de ${formData.name} foi criado com sucesso`
-      });
-
-      navigate('/');
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível criar o perfil. Tente novamente.",
-        variant: "destructive"
-      });
-    }
+  const handleSaveProfile = () => {
+    alert('Perfil Salvo!');
   };
 
   return (
@@ -182,8 +125,6 @@ const NovoPerfil = () => {
                   <input 
                     type="text" 
                     id="child-name" 
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full bg-black/40 border-4 border-cyan-400 p-2 text-white text-lg focus:outline-none focus:border-yellow-400" 
                     placeholder="Aventureiro" 
                   />
@@ -193,8 +134,6 @@ const NovoPerfil = () => {
                     <label htmlFor="child-gender" className="text-lg block mb-1">Gênero</label>
                     <select 
                       id="child-gender" 
-                      value={formData.gender}
-                      onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
                       className="w-full bg-black/40 border-4 border-cyan-400 p-2 text-white text-lg focus:outline-none focus:border-yellow-400 appearance-none"
                       style={{
                         backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="%2300ffff"><polygon points="0,0 20,0 10,10"/></svg>')`,
@@ -214,8 +153,6 @@ const NovoPerfil = () => {
                     <input 
                       type="date" 
                       id="child-birthdate" 
-                      value={formData.birthDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, birthDate: e.target.value }))}
                       className="w-full bg-black/40 border-4 border-cyan-400 p-2 text-white text-lg focus:outline-none focus:border-yellow-400"
                       style={{ colorScheme: 'dark' }}
                     />

@@ -1,106 +1,58 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TaskFormData {
   title: string;
   description: string;
   reward: number;
-  child_id: string;
-  difficulty: string;
-  category: string;
+  child: string;
+  frequency: 'DIARIA' | 'SEMANAL' | 'UNICA' | 'DATAS_ESPECIFICAS';
+  dateStart?: string;
+  dateEnd?: string;
+  weekdays?: string[];
+  specificDate?: string;
+  timeStart?: string;
+  timeEnd?: string;
+  timeMode: 'start-end' | 'start-duration';
+  duration?: number; // em minutos
 }
 
 interface TaskCreationFormProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TaskFormData) => void;
 }
 
 export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
-  const { user } = useAuth();
-  const [children, setChildren] = useState<any[]>([]);
-  const [loadingChildren, setLoadingChildren] = useState(false);
-  
   const [formData, setFormData] = useState<TaskFormData>({
-    title: '',
-    description: '',
-    reward: 10,
-    child_id: '',
-    difficulty: 'easy',
-    category: 'general'
+    title: 'Escovar os dentes',
+    description: 'Lembre-se de escovar bem por 2 minutos.',
+    reward: 5,
+    child: 'Aventureiro',
+    frequency: 'DIARIA',
+    dateStart: '',
+    dateEnd: '',
+    weekdays: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    timeStart: '08:00',
+    timeEnd: '08:10',
+    timeMode: 'start-end',
+    duration: 10,
   });
 
-  useEffect(() => {
-    fetchChildren();
-  }, [user]);
-
-  const fetchChildren = async () => {
-    if (!user) return;
-    
-    setLoadingChildren(true);
-    const { data, error } = await supabase
-      .from('children')
-      .select('id, name')
-      .eq('parent_id', user.id);
-    
-    setLoadingChildren(false);
-    
-    if (!error && data) {
-      setChildren(data);
-      // Auto-select first child if only one exists
-      if (data.length === 1) {
-        setFormData(prev => ({ ...prev, child_id: data[0].id }));
-      }
-    }
+  const updateFrequencyFields = (frequency: string) => {
+    setFormData(prev => ({ ...prev, frequency: frequency as any }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const toggleWeekday = (day: string) => {
+    setFormData(prev => ({
+      ...prev,
+      weekdays: prev.weekdays?.includes(day) 
+        ? prev.weekdays.filter(d => d !== day)
+        : [...(prev.weekdays || []), day]
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.child_id) {
-      alert('Por favor, selecione uma criança');
-      return;
-    }
-    
-    if (!formData.title.trim()) {
-      alert('Por favor, preencha o título da tarefa');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert([
-          {
-            child_id: formData.child_id,
-            title: formData.title.trim(),
-            description: formData.description.trim() || null,
-            points: formData.reward,
-            difficulty: formData.difficulty,
-            category: formData.category,
-            created_by: user?.id
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        reward: 10,
-        child_id: children.length === 1 ? children[0].id : '',
-        difficulty: 'easy',
-        category: 'general'
-      });
-
-      onSubmit(data);
-    } catch (error) {
-      console.error('Erro ao criar tarefa:', error);
-      alert('Erro ao criar tarefa. Tente novamente.');
-    }
+    onSubmit(formData);
   };
 
   return (
@@ -109,116 +61,257 @@ export const TaskCreationForm = ({ onSubmit }: TaskCreationFormProps) => {
         <h2 className="text-3xl text-yellow-400 mb-6 border-b-4 border-yellow-400 pb-2">Criar Nova Tarefa</h2>
       </div>
       <ScrollArea className="flex-1 px-6">
-        <form className="space-y-6 pb-6" onSubmit={handleSubmit}>
+        <form className="space-y-4 pb-6" onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="task-title" className="text-lg block mb-1">Título da Tarefa</label>
+          <input 
+            type="text" 
+            id="task-title" 
+            className="nes-input" 
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          />
+        </div>
+        <div>
+          <label htmlFor="task-desc" className="text-lg block mb-1">Descrição (Opcional)</label>
+          <textarea 
+            id="task-desc" 
+            className="nes-input h-24"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-cyan-400 font-bold mb-2">
-              Título da Tarefa
-            </label>
+            <label htmlFor="task-reward" className="text-lg block mb-1">Recompensa</label>
             <input 
-              type="text" 
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full bg-black/40 border-4 border-cyan-400 p-3 text-white focus:outline-none focus:border-yellow-400"
-              placeholder="Ex: Arrumar a cama"
+              type="number" 
+              id="task-reward" 
+              className="nes-input" 
+              value={formData.reward}
+              onChange={(e) => setFormData(prev => ({ ...prev, reward: parseInt(e.target.value) }))}
             />
           </div>
-
           <div>
-            <label className="block text-cyan-400 font-bold mb-2">
-              Descrição (Opcional)
-            </label>
-            <textarea 
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full bg-black/40 border-4 border-cyan-400 p-3 text-white focus:outline-none focus:border-yellow-400 h-24"
-              placeholder="Deixar o quarto organizado..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-cyan-400 font-bold mb-2">
-              Criança Responsável
-            </label>
-            <select
-              value={formData.child_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, child_id: e.target.value }))}
-              className="w-full bg-black/40 border-4 border-cyan-400 p-3 text-white focus:outline-none focus:border-yellow-400"
-              disabled={loadingChildren}
+            <label htmlFor="task-child" className="text-lg block mb-1">Associar à Criança</label>
+            <select 
+              id="task-child" 
+              className="nes-select"
+              value={formData.child}
+              onChange={(e) => setFormData(prev => ({ ...prev, child: e.target.value }))}
             >
-              <option value="">
-                {loadingChildren ? 'Carregando...' : 'Selecione uma criança'}
-              </option>
-              {children.map(child => (
-                <option key={child.id} value={child.id}>
-                  {child.name}
-                </option>
-              ))}
+              <option>Aventureiro</option>
+              <option>Exploradora</option>
             </select>
-            {children.length === 0 && !loadingChildren && (
-              <p className="text-red-400 text-sm mt-1">
-                Nenhuma criança encontrada. Crie um perfil primeiro.
-              </p>
-            )}
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-cyan-400 font-bold mb-2">
-                Recompensa (Moedas)
+        </div>
+        
+        {/* Configuração de Horários */}
+        <div className="space-y-4 border-t border-gray-600 pt-4">
+          <h3 className="text-xl text-cyan-400">Horário da Tarefa</h3>
+          <div>
+            <label className="text-lg block mb-2">Configuração de Tempo</label>
+            <div className="flex gap-4 mb-4">
+              <label className="flex items-center gap-2 text-lg cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="time-mode" 
+                  value="start-end" 
+                  className="nes-radio"
+                  checked={formData.timeMode === 'start-end'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, timeMode: e.target.value as any }))}
+                />
+                Início e Fim
               </label>
+              <label className="flex items-center gap-2 text-lg cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="time-mode" 
+                  value="start-duration" 
+                  className="nes-radio"
+                  checked={formData.timeMode === 'start-duration'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, timeMode: e.target.value as any }))}
+                />
+                Início e Duração
+              </label>
+            </div>
+          </div>
+          
+          {formData.timeMode === 'start-end' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="time-start" className="block mb-1">Horário de Início</label>
+                <input 
+                  type="time" 
+                  id="time-start" 
+                  className="nes-input"
+                  value={formData.timeStart || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, timeStart: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label htmlFor="time-end" className="block mb-1">Horário de Fim</label>
+                <input 
+                  type="time" 
+                  id="time-end" 
+                  className="nes-input"
+                  value={formData.timeEnd || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, timeEnd: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+          
+          {formData.timeMode === 'start-duration' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="time-start-duration" className="block mb-1">Horário de Início</label>
+                <input 
+                  type="time" 
+                  id="time-start-duration" 
+                  className="nes-input"
+                  value={formData.timeStart || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, timeStart: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label htmlFor="duration" className="block mb-1">Duração (minutos)</label>
+                <input 
+                  type="number" 
+                  id="duration" 
+                  className="nes-input"
+                  min="1"
+                  max="1440"
+                  value={formData.duration || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="task-frequency" className="text-lg block mb-1">Frequência</label>
+          <select 
+            id="task-frequency" 
+            className="nes-select" 
+            value={formData.frequency}
+            onChange={(e) => updateFrequencyFields(e.target.value)}
+          >
+            <option value="DIARIA">Diária</option>
+            <option value="SEMANAL">Semanal</option>
+            <option value="UNICA">Data Única</option>
+            <option value="DATAS_ESPECIFICAS">Datas Específicas</option>
+          </select>
+        </div>
+       
+        {/* Campos Dinâmicos de Frequência */}
+        <div className="space-y-4 pt-2">
+          {/* Diária */}
+          {formData.frequency === 'DIARIA' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="date-start-diaria" className="block mb-1">Data Início</label>
+                <input 
+                  type="date" 
+                  id="date-start-diaria" 
+                  className="nes-input"
+                  value={formData.dateStart || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dateStart: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label htmlFor="date-end-diaria" className="block mb-1">Data Fim</label>
+                <input 
+                  type="date" 
+                  id="date-end-diaria" 
+                  className="nes-input"
+                  value={formData.dateEnd || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Semanal */}
+          {formData.frequency === 'SEMANAL' && (
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="date-start-semanal" className="block mb-1">Data Início</label>
+                  <input 
+                    type="date" 
+                    id="date-start-semanal" 
+                    className="nes-input"
+                    value={formData.dateStart || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dateStart: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="date-end-semanal" className="block mb-1">Data Fim</label>
+                  <input 
+                    type="date" 
+                    id="date-end-semanal" 
+                    className="nes-input"
+                    value={formData.dateEnd || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <label className="block mb-1">Dias da Semana</label>
+              <div className="grid grid-cols-4 md:grid-cols-7 gap-2 text-center">
+                {[
+                  { key: 'sun', label: 'D' },
+                  { key: 'mon', label: 'S' },
+                  { key: 'tue', label: 'T' },
+                  { key: 'wed', label: 'Q' },
+                  { key: 'thu', label: 'Q' },
+                  { key: 'fri', label: 'S' },
+                  { key: 'sat', label: 'S' }
+                ].map(day => (
+                  <div key={day.key}>
+                    <input 
+                      type="checkbox" 
+                      id={day.key} 
+                      className="task-checkbox"
+                      checked={formData.weekdays?.includes(day.key) || false}
+                      onChange={() => toggleWeekday(day.key)}
+                    />
+                    <label htmlFor={day.key}>{day.label}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Única */}
+          {formData.frequency === 'UNICA' && (
+            <div>
+              <label htmlFor="date-unica" className="block mb-1">Data</label>
               <input 
-                type="number" 
-                min="1"
-                max="100"
-                value={formData.reward}
-                onChange={(e) => setFormData(prev => ({ ...prev, reward: parseInt(e.target.value) || 1 }))}
-                className="w-full bg-black/40 border-4 border-cyan-400 p-3 text-white focus:outline-none focus:border-yellow-400"
+                type="date" 
+                id="date-unica" 
+                className="nes-input"
+                value={formData.specificDate || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, specificDate: e.target.value }))}
               />
             </div>
-
+          )}
+          
+          {/* Datas Específicas */}
+          {formData.frequency === 'DATAS_ESPECIFICAS' && (
             <div>
-              <label className="block text-cyan-400 font-bold mb-2">
-                Dificuldade
-              </label>
-              <select
-                value={formData.difficulty}
-                onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value }))}
-                className="w-full bg-black/40 border-4 border-cyan-400 p-3 text-white focus:outline-none focus:border-yellow-400"
-              >
-                <option value="easy">Fácil</option>
-                <option value="medium">Médio</option>
-                <option value="hard">Difícil</option>
-              </select>
+              <label className="block mb-1">Selecione as datas</label>
+              <input type="text" className="nes-input" placeholder="Use um calendário de múltipla seleção aqui" />
             </div>
-          </div>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-cyan-400 font-bold mb-2">
-              Categoria
-            </label>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-              className="w-full bg-black/40 border-4 border-cyan-400 p-3 text-white focus:outline-none focus:border-yellow-400"
-            >
-              <option value="general">Geral</option>
-              <option value="hygiene">Higiene</option>
-              <option value="study">Estudos</option>
-              <option value="chores">Tarefas Domésticas</option>
-              <option value="exercise">Exercícios</option>
-            </select>
-          </div>
-
-          <div className="pt-4">
-            <button 
-              type="submit" 
-              className="w-full pixel-btn text-green-400" 
-              style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}
-              disabled={loadingChildren || children.length === 0}
-            >
-              Criar Tarefa
-            </button>
-          </div>
+        <div className="pt-4">
+          <button type="submit" className="pixel-btn w-full text-green-400" style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}>
+            Salvar Tarefa
+          </button>
+        </div>
         </form>
       </ScrollArea>
     </div>
