@@ -30,7 +30,7 @@ export const TasksList = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Estados dos filtros
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
