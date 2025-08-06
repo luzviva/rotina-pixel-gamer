@@ -199,49 +199,70 @@ export type Database = {
       }
       tasks: {
         Row: {
-          category: string
           child_id: string
           completed_at: string | null
           created_at: string
           created_by: string
+          date_end: string | null
+          date_start: string | null
           description: string | null
-          difficulty: string
           due_date: string | null
+          duration_minutes: number | null
+          frequency: Database["public"]["Enums"]["task_frequency"] | null
           id: string
           is_completed: boolean
           points: number
+          specific_dates: string[] | null
+          time_end: string | null
+          time_mode: Database["public"]["Enums"]["time_mode"] | null
+          time_start: string | null
           title: string
           updated_at: string
+          weekdays: string[] | null
         }
         Insert: {
-          category?: string
           child_id: string
           completed_at?: string | null
           created_at?: string
           created_by: string
+          date_end?: string | null
+          date_start?: string | null
           description?: string | null
-          difficulty?: string
           due_date?: string | null
+          duration_minutes?: number | null
+          frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: string
           is_completed?: boolean
           points?: number
+          specific_dates?: string[] | null
+          time_end?: string | null
+          time_mode?: Database["public"]["Enums"]["time_mode"] | null
+          time_start?: string | null
           title: string
           updated_at?: string
+          weekdays?: string[] | null
         }
         Update: {
-          category?: string
           child_id?: string
           completed_at?: string | null
           created_at?: string
           created_by?: string
+          date_end?: string | null
+          date_start?: string | null
           description?: string | null
-          difficulty?: string
           due_date?: string | null
+          duration_minutes?: number | null
+          frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: string
           is_completed?: boolean
           points?: number
+          specific_dates?: string[] | null
+          time_end?: string | null
+          time_mode?: Database["public"]["Enums"]["time_mode"] | null
+          time_start?: string | null
           title?: string
           updated_at?: string
+          weekdays?: string[] | null
         }
         Relationships: [
           {
@@ -261,7 +282,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      task_frequency: "DIARIA" | "SEMANAL" | "UNICA" | "DATAS_ESPECIFICAS"
+      time_mode: "start-end" | "start-duration"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -388,6 +410,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      task_frequency: ["DIARIA", "SEMANAL", "UNICA", "DATAS_ESPECIFICAS"],
+      time_mode: ["start-end", "start-duration"],
+    },
   },
 } as const
