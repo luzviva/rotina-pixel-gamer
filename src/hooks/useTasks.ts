@@ -104,13 +104,16 @@ export const useTasks = (childId?: string) => {
   };
 
   const getTasksForDate = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    const weekdaysMap = {
+      0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 
+      4: 'thu', 5: 'fri', 6: 'sat'
+    };
+    
+    const dayOfWeek = weekdaysMap[date.getDay() as keyof typeof weekdaysMap];
     
     return tasks.filter(task => {
-      // Agora que criamos instâncias individuais com due_date,
-      // basta filtrar pelo due_date que corresponde à data selecionada
-      // E apenas tarefas visíveis aparecem na visão da criança
-      return task.due_date === dateString && task.is_visible;
+      // Filtra tarefas que incluem o dia da semana atual e são visíveis
+      return task.weekdays?.includes(dayOfWeek) && task.is_visible;
     });
   };
 
