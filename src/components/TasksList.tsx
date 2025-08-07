@@ -16,8 +16,6 @@ interface Task {
   description: string | null;
   points: number;
   child_id: string;
-  created_by: string;
-  created_by_name: string | null;
   due_date: string | null;
   time_start: string | null;
   time_end: string | null;
@@ -53,23 +51,12 @@ export const TasksList = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          profiles!fk_tasks_created_by_profiles (
-            display_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      // Processar os dados para incluir o display_name
-      const processedTasks = (data || []).map((task: any) => ({
-        ...task,
-        created_by_name: task.profiles?.display_name || null
-      }));
-
-      setTasks(processedTasks);
+      setTasks(data || []);
     } catch (error) {
       console.error('Erro ao carregar tarefas:', error);
       toast({
@@ -507,7 +494,7 @@ export const TasksList = () => {
                       <p className="text-white/80 mb-3">{task.description}</p>
                     )}
                     
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-yellow-400">Recompensa:</span>
                         <p className="text-white">{task.points} moedas</p>
@@ -515,10 +502,6 @@ export const TasksList = () => {
                       <div>
                         <span className="text-yellow-400">Criança:</span>
                         <p className="text-white">{getChildName(task.child_id)}</p>
-                      </div>
-                      <div>
-                        <span className="text-yellow-400">Criado por:</span>
-                        <p className="text-white">{task.created_by_name || 'N/A'}</p>
                       </div>
                       <div>
                         <span className="text-yellow-400">Data:</span>

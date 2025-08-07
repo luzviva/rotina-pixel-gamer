@@ -11,7 +11,6 @@ export interface Task {
   due_date: string | null;
   child_id: string;
   created_by: string;
-  created_by_name: string | null;
   frequency: 'DIARIA' | 'SEMANAL' | 'UNICA' | 'DATAS_ESPECIFICAS';
   date_start: string | null;
   date_end: string | null;
@@ -38,12 +37,7 @@ export const useTasks = (childId?: string) => {
 
       let query = supabase
         .from('tasks')
-        .select(`
-          *,
-          profiles!fk_tasks_created_by_profiles (
-            display_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (childId) {
@@ -56,13 +50,7 @@ export const useTasks = (childId?: string) => {
         throw fetchError;
       }
 
-      // Processar os dados para incluir o display_name
-      const processedTasks = (data || []).map((task: any) => ({
-        ...task,
-        created_by_name: task.profiles?.display_name || null
-      }));
-
-      setTasks(processedTasks);
+      setTasks(data || []);
     } catch (err) {
       console.error('Error fetching tasks:', err);
       setError(err instanceof Error ? err.message : 'Erro ao carregar tarefas');
