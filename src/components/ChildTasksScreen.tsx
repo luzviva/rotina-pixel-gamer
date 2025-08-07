@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
 import { CoinIcon } from "./CoinIcon";
+import { useTasks } from "@/hooks/useTasks";
+import { useChildren } from "@/hooks/useChildren";
 
 interface ChildTasksScreenProps {
   coinBalance: number;
@@ -6,22 +9,58 @@ interface ChildTasksScreenProps {
   onLogout: () => void;
 }
 
-const tasks = [
-  { id: 1, name: "Arrumar a cama", reward: 5, completed: true },
-  { id: 2, name: "Ler por 15 minutos", reward: 10, completed: false }
-];
-
-const weekDays = [
-  { name: "SEG", tasks: tasks },
-  { name: "TER", tasks: [{ id: 3, name: "Arrumar a cama", reward: 5, completed: false }] },
-  { name: "QUA", tasks: [] },
-  { name: "QUI", tasks: [] },
-  { name: "SEX", tasks: [] },
-  { name: "SAB", tasks: [] },
-  { name: "DOM", tasks: [] }
-];
-
 export const ChildTasksScreen = ({ coinBalance, onNavigate, onLogout }: ChildTasksScreenProps) => {
+  const { children } = useChildren();
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const { tasks, loading, getTasksForDate } = useTasks(selectedChildId || undefined);
+
+  // Seleciona automaticamente a primeira criança quando disponível
+  useEffect(() => {
+    if (children.length > 0 && !selectedChildId) {
+      setSelectedChildId(children[0].id);
+    }
+  }, [children, selectedChildId]);
+
+  const selectedChild = selectedChildId ? children.find(child => child.id === selectedChildId) : null;
+
+  // Cria dados para os dias da semana baseado nas tarefas reais
+  const weekDays = [
+    { name: "SEG", dayIndex: 1 },
+    { name: "TER", dayIndex: 2 },
+    { name: "QUA", dayIndex: 3 },
+    { name: "QUI", dayIndex: 4 },
+    { name: "SEX", dayIndex: 5 },
+    { name: "SAB", dayIndex: 6 },
+    { name: "DOM", dayIndex: 0 }
+  ].map(day => {
+    // Cria uma data para o dia da semana
+    const today = new Date();
+    const currentDayOfWeek = today.getDay();
+    const dayDiff = day.dayIndex - currentDayOfWeek;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + dayDiff);
+    
+    const tasksForDay = getTasksForDate(targetDate);
+    
+    return {
+      name: day.name,
+      tasks: tasksForDay.map(task => ({
+        id: task.id,
+        name: task.title,
+        reward: task.points,
+        completed: task.is_completed
+      }))
+    };
+  });
+
+  if (loading) {
+    return (
+      <div className="text-center text-cyan-400 p-8">
+        Carregando tarefas...
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Header da Criança */}
