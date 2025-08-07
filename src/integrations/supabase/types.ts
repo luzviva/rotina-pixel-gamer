@@ -308,6 +308,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_tasks_created_by_profiles"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "tasks_child_id_fkey"
             columns: ["child_id"]
             isOneToOne: false

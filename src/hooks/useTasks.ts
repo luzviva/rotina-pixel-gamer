@@ -40,7 +40,7 @@ export const useTasks = (childId?: string) => {
         .from('tasks')
         .select(`
           *,
-          profiles:created_by (
+          profiles!fk_tasks_created_by_profiles (
             display_name
           )
         `)
@@ -57,7 +57,7 @@ export const useTasks = (childId?: string) => {
       }
 
       // Processar os dados para incluir o display_name
-      const processedTasks = (data || []).map(task => ({
+      const processedTasks = (data || []).map((task: any) => ({
         ...task,
         created_by_name: task.profiles?.display_name || null
       }));
