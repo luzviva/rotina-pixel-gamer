@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, Edit, Filter, ChevronDown, ChevronUp, Eye, EyeOff, CheckSquare, Square } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { StoreItemCreationForm } from "./StoreItemCreationForm";
 import { Button } from "./ui/button";
@@ -15,6 +15,7 @@ interface StoreItem {
   price: number;
   category: string;
   is_available: boolean;
+  is_visible: boolean;
   image_url: string | null;
   created_by: string;
   created_at: string;
@@ -30,8 +31,13 @@ export const StoreItemsList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // Estados de seleção múltipla
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
+  
   // Estados dos filtros
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'unavailable'>('all');
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [nameFilter, setNameFilter] = useState<string>('');
   
@@ -75,6 +81,13 @@ export const StoreItemsList = () => {
       filtered = filtered.filter(item => !item.is_available);
     }
 
+    // Filtro por visibilidade
+    if (visibilityFilter === 'visible') {
+      filtered = filtered.filter(item => item.is_visible);
+    } else if (visibilityFilter === 'hidden') {
+      filtered = filtered.filter(item => !item.is_visible);
+    }
+
     // Filtro por categoria
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(item => item.category === categoryFilter);
@@ -88,12 +101,98 @@ export const StoreItemsList = () => {
     }
 
     setFilteredItems(filtered);
-  }, [storeItems, statusFilter, categoryFilter, nameFilter]);
+  }, [storeItems, statusFilter, visibilityFilter, categoryFilter, nameFilter]);
 
   const clearFilters = () => {
     setStatusFilter('all');
+    setVisibilityFilter('all');
     setCategoryFilter('all');
     setNameFilter('');
+  };
+
+  // Funções de seleção múltipla
+  const toggleSelectMode = () => {
+    setSelectMode(!selectMode);
+    setSelectedItems(new Set());
+  };
+
+  const toggleItemSelection = (itemId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const selectAllItems = () => {
+    if (selectedItems.size === filteredItems.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(filteredItems.map(item => item.id)));
+    }
+  };
+
+  // Ações em lote
+  const handleBulkDelete = async () => {
+    if (selectedItems.size === 0) return;
+    
+    if (!confirm(`Tem certeza que deseja excluir ${selectedItems.size} itens selecionados?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('store_items')
+        .delete()
+        .in('id', Array.from(selectedItems));
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: `${selectedItems.size} itens excluídos com sucesso!`,
+      });
+
+      setSelectedItems(new Set());
+      fetchStoreItems();
+    } catch (error) {
+      console.error('Erro ao excluir itens:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir itens selecionados",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkToggleVisibility = async (visible: boolean) => {
+    if (selectedItems.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('store_items')
+        .update({ is_visible: visible })
+        .in('id', Array.from(selectedItems));
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: `${selectedItems.size} itens ${visible ? 'exibidos' : 'ocultados'} com sucesso!`,
+      });
+
+      setSelectedItems(new Set());
+      fetchStoreItems();
+    } catch (error) {
+      console.error('Erro ao alterar visibilidade:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar visibilidade dos itens",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -114,7 +213,7 @@ export const StoreItemsList = () => {
         description: "Item da loja excluído com sucesso!",
       });
 
-      fetchStoreItems(); // Atualizar a lista
+      fetchStoreItems();
     } catch (error) {
       console.error('Erro ao excluir item da loja:', error);
       toast({
@@ -187,7 +286,7 @@ export const StoreItemsList = () => {
 
       setShowEditDialog(false);
       setEditingItem(null);
-      fetchStoreItems(); // Atualizar a lista
+      fetchStoreItems();
     } catch (error) {
       console.error('Erro ao atualizar item da loja:', error);
       toast({
@@ -233,6 +332,70 @@ export const StoreItemsList = () => {
                   Itens da Loja ({filteredItems.length} de {storeItems.length})
                 </h3>
               </div>
+            </div>
+
+            {/* Botões de seleção e ações em lote */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={toggleSelectMode}
+                  variant={selectMode ? "default" : "outline"}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <CheckSquare size={16} />
+                  {selectMode ? 'Cancelar Seleção' : 'Selecionar Itens'}
+                </Button>
+                
+                {selectMode && (
+                  <>
+                    <Button
+                      onClick={selectAllItems}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      {selectedItems.size === filteredItems.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                    </Button>
+                    
+                    {selectedItems.size > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-cyan-400">
+                          {selectedItems.size} selecionados
+                        </span>
+                        <Button
+                          onClick={() => handleBulkToggleVisibility(false)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-orange-400 border-orange-400/30 hover:bg-orange-400/10"
+                        >
+                          <EyeOff size={16} />
+                          Ocultar
+                        </Button>
+                        <Button
+                          onClick={() => handleBulkToggleVisibility(true)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-green-400 border-green-400/30 hover:bg-green-400/10"
+                        >
+                          <Eye size={16} />
+                          Exibir
+                        </Button>
+                        <Button
+                          onClick={handleBulkDelete}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-red-400 border-red-400/30 hover:bg-red-400/10"
+                        >
+                          <Trash2 size={16} />
+                          Excluir
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              
               <Button
                 onClick={() => setShowFilters(!showFilters)}
                 variant="outline"
@@ -247,7 +410,7 @@ export const StoreItemsList = () => {
             {showFilters && (
               <div className="bg-slate-800/30 border border-cyan-400/30 rounded p-4 mb-6">
                 <h4 className="text-lg text-cyan-400 mb-4">Filtros</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {/* Filtro por Status */}
                   <div>
                     <label className="text-white/80 block mb-2">Status</label>
@@ -259,6 +422,21 @@ export const StoreItemsList = () => {
                         <SelectItem value="all">Todos</SelectItem>
                         <SelectItem value="available">Disponíveis</SelectItem>
                         <SelectItem value="unavailable">Indisponíveis</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Filtro por Visibilidade */}
+                  <div>
+                    <label className="text-white/80 block mb-2">Visibilidade</label>
+                    <Select value={visibilityFilter} onValueChange={(value: 'all' | 'visible' | 'hidden') => setVisibilityFilter(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a visibilidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="visible">Visíveis</SelectItem>
+                        <SelectItem value="hidden">Ocultos</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -319,9 +497,28 @@ export const StoreItemsList = () => {
             ) : (
               <div className="space-y-4">
                 {filteredItems.map((item) => (
-                  <div key={item.id} className="bg-slate-800/50 border-2 border-cyan-400/30 p-4 rounded">
+                  <div key={item.id} className={`bg-slate-800/50 border-2 p-4 rounded transition-colors ${
+                    selectMode && selectedItems.has(item.id) 
+                      ? 'border-cyan-400 bg-cyan-400/10' 
+                      : item.is_visible 
+                        ? 'border-cyan-400/30' 
+                        : 'border-orange-400/30 bg-orange-400/5'
+                  }`}>
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-xl text-cyan-400 font-bold">{item.title}</h4>
+                      <div className="flex items-center gap-3">
+                        {selectMode && (
+                          <button
+                            onClick={() => toggleItemSelection(item.id)}
+                            className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                          >
+                            {selectedItems.has(item.id) ? <CheckSquare size={20} /> : <Square size={20} />}
+                          </button>
+                        )}
+                        <h4 className={`text-xl font-bold ${item.is_visible ? 'text-cyan-400' : 'text-orange-400'}`}>
+                          {item.title}
+                          {!item.is_visible && <span className="text-sm ml-2 text-orange-400">(Oculto)</span>}
+                        </h4>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditItem(item)}
@@ -375,13 +572,22 @@ export const StoreItemsList = () => {
                     )}
                     
                     <div className="mt-2 flex justify-between items-center">
-                      <span className={`text-sm px-2 py-1 rounded ${
-                        item.is_available 
-                          ? 'bg-green-600/20 text-green-400 border border-green-400/30' 
-                          : 'bg-red-600/20 text-red-400 border border-red-400/30'
-                      }`}>
-                        {item.is_available ? 'Disponível' : 'Indisponível'}
-                      </span>
+                      <div className="flex gap-2">
+                        <span className={`text-sm px-2 py-1 rounded ${
+                          item.is_available 
+                            ? 'bg-green-600/20 text-green-400 border border-green-400/30' 
+                            : 'bg-red-600/20 text-red-400 border border-red-400/30'
+                        }`}>
+                          {item.is_available ? 'Disponível' : 'Indisponível'}
+                        </span>
+                        <span className={`text-sm px-2 py-1 rounded ${
+                          item.is_visible 
+                            ? 'bg-blue-600/20 text-blue-400 border border-blue-400/30' 
+                            : 'bg-orange-600/20 text-orange-400 border border-orange-400/30'
+                        }`}>
+                          {item.is_visible ? 'Visível' : 'Oculto'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
