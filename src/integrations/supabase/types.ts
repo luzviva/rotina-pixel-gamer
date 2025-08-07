@@ -86,6 +86,78 @@ export type Database = {
         }
         Relationships: []
       }
+      initial_tasks: {
+        Row: {
+          child_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          date_end: string | null
+          date_start: string | null
+          description: string | null
+          due_date: string | null
+          duration_minutes: string | null
+          frequency: string | null
+          id: string
+          is_completed: boolean | null
+          is_visible: boolean | null
+          points: number | null
+          specific_dates: string | null
+          time_end: string | null
+          time_mode: string | null
+          time_start: string | null
+          title: string | null
+          updated_at: string | null
+          weekdays: Json | null
+        }
+        Insert: {
+          child_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date_end?: string | null
+          date_start?: string | null
+          description?: string | null
+          due_date?: string | null
+          duration_minutes?: string | null
+          frequency?: string | null
+          id: string
+          is_completed?: boolean | null
+          is_visible?: boolean | null
+          points?: number | null
+          specific_dates?: string | null
+          time_end?: string | null
+          time_mode?: string | null
+          time_start?: string | null
+          title?: string | null
+          updated_at?: string | null
+          weekdays?: Json | null
+        }
+        Update: {
+          child_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date_end?: string | null
+          date_start?: string | null
+          description?: string | null
+          due_date?: string | null
+          duration_minutes?: string | null
+          frequency?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_visible?: boolean | null
+          points?: number | null
+          specific_dates?: string | null
+          time_end?: string | null
+          time_mode?: string | null
+          time_start?: string | null
+          title?: string | null
+          updated_at?: string | null
+          weekdays?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -308,6 +380,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_tasks_created_by_profiles"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "tasks_child_id_fkey"
             columns: ["child_id"]
             isOneToOne: false
@@ -321,7 +400,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_initial_tasks: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          points: number
+          frequency: Database["public"]["Enums"]["task_frequency"]
+          weekdays: number[]
+          time_start: string
+          time_end: string
+          time_mode: Database["public"]["Enums"]["time_mode"]
+          duration_minutes: number
+          is_visible: boolean
+        }[]
+      }
     }
     Enums: {
       task_frequency: "DIARIA" | "SEMANAL" | "UNICA" | "DATAS_ESPECIFICAS"
