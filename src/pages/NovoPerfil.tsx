@@ -105,6 +105,51 @@ const NovoPerfil = () => {
     }
   };
 
+  const createInitialTasks = async (childId: string, userId: string) => {
+    try {
+      // Buscar todas as tarefas iniciais usando raw SQL
+      const { data: initialTasks, error: fetchError } = await supabase
+        .rpc('get_initial_tasks');
+
+      if (fetchError) {
+        console.error('Error fetching initial tasks:', fetchError);
+        return;
+      }
+
+      if (!initialTasks || initialTasks.length === 0) {
+        return;
+      }
+
+      // Criar tarefas baseadas no template initial_tasks
+      const tasksToCreate = initialTasks.map((task: any) => ({
+        title: task.title,
+        description: task.description,
+        points: task.points || 10,
+        child_id: childId,
+        created_by: userId,
+        frequency: task.frequency || 'SEMANAL',
+        weekdays: task.weekdays,
+        time_start: task.time_start,
+        time_end: task.time_end,
+        time_mode: task.time_mode || 'start-end',
+        duration_minutes: task.duration_minutes,
+        is_visible: task.is_visible !== false,
+        is_completed: false
+      }));
+
+      const { error: insertError } = await supabase
+        .from('tasks')
+        .insert(tasksToCreate);
+
+      if (insertError) {
+        console.error('Error creating initial tasks:', insertError);
+        toast.error('Erro ao criar tarefas iniciais');
+      }
+    } catch (error) {
+      console.error('Error in createInitialTasks:', error);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user) {
       toast.error('Você precisa estar logado para salvar o perfil');
@@ -145,6 +190,9 @@ const NovoPerfil = () => {
       if (error) {
         throw error;
       }
+
+      // Create initial tasks for the new child
+      await createInitialTasks(data.id, user.id);
 
       toast.success('Perfil criado com sucesso!');
       navigate('/');
