@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useChildren } from "@/hooks/useChildren";
-import { Trash2, Edit, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, Edit, Filter, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { TaskCreationForm } from "./TaskCreationForm";
 import { Button } from "./ui/button";
@@ -20,6 +21,7 @@ interface Task {
   time_end: string | null;
   weekdays: string[] | null;
   is_completed: boolean;
+  is_visible: boolean;
   created_at: string;
 }
 
@@ -36,6 +38,10 @@ export const TasksList = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [childFilter, setChildFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');
+  
+  // Estados da seleção múltipla
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   
   const { toast } = useToast();
   const { children } = useChildren();
@@ -95,6 +101,89 @@ export const TasksList = () => {
     setStatusFilter('all');
     setChildFilter('all');
     setDateFilter('');
+  };
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedTasks(new Set());
+  };
+
+  const toggleTaskSelection = (taskId: string) => {
+    const newSelected = new Set(selectedTasks);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    setSelectedTasks(newSelected);
+  };
+
+  const selectAllTasks = () => {
+    if (selectedTasks.size === filteredTasks.length) {
+      setSelectedTasks(new Set());
+    } else {
+      setSelectedTasks(new Set(filteredTasks.map(task => task.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedTasks.size === 0) return;
+    
+    if (!confirm(`Tem certeza que deseja excluir ${selectedTasks.size} tarefa(s)?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', Array.from(selectedTasks));
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: `${selectedTasks.size} tarefa(s) excluída(s) com sucesso!`,
+      });
+
+      setSelectedTasks(new Set());
+      fetchTasks();
+    } catch (error) {
+      console.error('Erro ao excluir tarefas:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir tarefas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkToggleVisibility = async (makeVisible: boolean) => {
+    if (selectedTasks.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ is_visible: makeVisible })
+        .in('id', Array.from(selectedTasks));
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: `${selectedTasks.size} tarefa(s) ${makeVisible ? 'mostrada(s)' : 'ocultada(s)'} com sucesso!`,
+      });
+
+      setSelectedTasks(new Set());
+      fetchTasks();
+    } catch (error) {
+      console.error('Erro ao alterar visibilidade:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar visibilidade das tarefas",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteTask = async (taskId: string) => {
@@ -208,16 +297,66 @@ export const TasksList = () => {
                 <h3 className="text-2xl text-yellow-400">
                   Tarefas Existentes ({filteredTasks.length} de {tasks.length})
                 </h3>
+                {selectedTasks.size > 0 && (
+                  <span className="text-cyan-400 text-sm">
+                    ({selectedTasks.size} selecionada(s))
+                  </span>
+                )}
               </div>
-              <Button
-                onClick={() => setShowFilters(!showFilters)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Filter size={16} />
-                {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={toggleSelectionMode}
+                  variant={isSelectionMode ? "default" : "outline"}
+                  size="sm"
+                >
+                  {isSelectionMode ? 'Cancelar Seleção' : 'Selecionar'}
+                </Button>
+                <Button
+                  onClick={() => setShowFilters(!showFilters)}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Filter size={16} />
+                  {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                </Button>
+              </div>
             </div>
+
+            {/* Ações em lote */}
+            {isSelectionMode && selectedTasks.size > 0 && (
+              <div className="bg-slate-800/30 border border-cyan-400/30 rounded p-4 mb-6">
+                <h4 className="text-lg text-cyan-400 mb-4">Ações em Lote</h4>
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handleBulkDelete}
+                    variant="destructive"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Excluir Selecionadas
+                  </Button>
+                  <Button
+                    onClick={() => handleBulkToggleVisibility(false)}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <EyeOff size={16} />
+                    Ocultar
+                  </Button>
+                  <Button
+                    onClick={() => handleBulkToggleVisibility(true)}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Eye size={16} />
+                    Mostrar
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Seção de Filtros */}
             {showFilters && (
@@ -293,26 +432,62 @@ export const TasksList = () => {
               </p>
             ) : (
               <div className="space-y-4">
+                {/* Cabeçalho com seleção geral */}
+                {isSelectionMode && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-700/30 border border-cyan-400/20 rounded">
+                    <Checkbox
+                      checked={selectedTasks.size === filteredTasks.length && filteredTasks.length > 0}
+                      onCheckedChange={selectAllTasks}
+                    />
+                    <span className="text-cyan-400 text-sm">
+                      Selecionar todas ({filteredTasks.length})
+                    </span>
+                  </div>
+                )}
+                
                 {filteredTasks.map((task) => (
-                  <div key={task.id} className="bg-slate-800/50 border-2 border-cyan-400/30 p-4 rounded">
+                  <div key={task.id} className={`bg-slate-800/50 border-2 p-4 rounded transition-colors ${
+                    selectedTasks.has(task.id) 
+                      ? 'border-cyan-400 bg-cyan-400/10' 
+                      : 'border-cyan-400/30'
+                  }`}>
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="text-xl text-cyan-400 font-bold">{task.title}</h4>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditTask(task)}
-                          className="text-yellow-400 hover:text-yellow-300 transition-colors"
-                          title="Editar tarefa"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title="Excluir tarefa"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                      <div className="flex items-center gap-3">
+                        {isSelectionMode && (
+                          <Checkbox
+                            checked={selectedTasks.has(task.id)}
+                            onCheckedChange={() => toggleTaskSelection(task.id)}
+                          />
+                        )}
+                        <div>
+                          <h4 className="text-xl text-cyan-400 font-bold flex items-center gap-2">
+                            {task.title}
+                            {!task.is_visible && (
+                              <span className="text-xs bg-orange-600/20 text-orange-400 px-2 py-1 rounded border border-orange-400/30">
+                                OCULTA
+                              </span>
+                            )}
+                          </h4>
+                        </div>
                       </div>
+                      {!isSelectionMode && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditTask(task)}
+                            className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                            title="Editar tarefa"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                            title="Excluir tarefa"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                     
                     {task.description && (

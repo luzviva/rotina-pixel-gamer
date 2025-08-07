@@ -7,6 +7,7 @@ export interface Task {
   description: string | null;
   points: number;
   is_completed: boolean;
+  is_visible: boolean;
   due_date: string | null;
   child_id: string;
   created_by: string;
@@ -108,7 +109,8 @@ export const useTasks = (childId?: string) => {
     return tasks.filter(task => {
       // Agora que criamos instâncias individuais com due_date,
       // basta filtrar pelo due_date que corresponde à data selecionada
-      return task.due_date === dateString;
+      // E apenas tarefas visíveis aparecem na visão da criança
+      return task.due_date === dateString && task.is_visible;
     });
   };
 

@@ -247,6 +247,7 @@ export type Database = {
           frequency: Database["public"]["Enums"]["task_frequency"] | null
           id: string
           is_completed: boolean
+          is_visible: boolean
           points: number
           specific_dates: string[] | null
           time_end: string | null
@@ -269,6 +270,7 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: string
           is_completed?: boolean
+          is_visible?: boolean
           points?: number
           specific_dates?: string[] | null
           time_end?: string | null
@@ -291,6 +293,7 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: string
           is_completed?: boolean
+          is_visible?: boolean
           points?: number
           specific_dates?: string[] | null
           time_end?: string | null
