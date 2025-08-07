@@ -96,19 +96,19 @@ export type Database = {
           date_start: string | null
           description: string | null
           due_date: string | null
-          duration_minutes: string | null
-          frequency: string | null
+          duration_minutes: number | null
+          frequency: Database["public"]["Enums"]["task_frequency"] | null
           id: string
           is_completed: boolean | null
           is_visible: boolean | null
           points: number | null
           specific_dates: string | null
           time_end: string | null
-          time_mode: string | null
+          time_mode: Database["public"]["Enums"]["time_mode"] | null
           time_start: string | null
           title: string | null
           updated_at: string | null
-          weekdays: Json | null
+          weekdays: number[] | null
         }
         Insert: {
           child_id?: string | null
@@ -119,19 +119,19 @@ export type Database = {
           date_start?: string | null
           description?: string | null
           due_date?: string | null
-          duration_minutes?: string | null
-          frequency?: string | null
-          id: string
+          duration_minutes?: number | null
+          frequency?: Database["public"]["Enums"]["task_frequency"] | null
+          id?: string
           is_completed?: boolean | null
           is_visible?: boolean | null
           points?: number | null
           specific_dates?: string | null
           time_end?: string | null
-          time_mode?: string | null
+          time_mode?: Database["public"]["Enums"]["time_mode"] | null
           time_start?: string | null
           title?: string | null
           updated_at?: string | null
-          weekdays?: Json | null
+          weekdays?: number[] | null
         }
         Update: {
           child_id?: string | null
@@ -142,19 +142,19 @@ export type Database = {
           date_start?: string | null
           description?: string | null
           due_date?: string | null
-          duration_minutes?: string | null
-          frequency?: string | null
+          duration_minutes?: number | null
+          frequency?: Database["public"]["Enums"]["task_frequency"] | null
           id?: string
           is_completed?: boolean | null
           is_visible?: boolean | null
           points?: number | null
           specific_dates?: string | null
           time_end?: string | null
-          time_mode?: string | null
+          time_mode?: Database["public"]["Enums"]["time_mode"] | null
           time_start?: string | null
           title?: string | null
           updated_at?: string | null
-          weekdays?: Json | null
+          weekdays?: number[] | null
         }
         Relationships: []
       }
