@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Heart, Gift, ArrowLeft, KeyRound } from "lucide-react";
+import { Settings, Heart, Gift, ArrowLeft, KeyRound, Upload } from "lucide-react";
+import { useChildren } from "@/hooks/useChildren";
 
 interface ParentDashboardProps {
   onLogout: () => void;
@@ -21,6 +22,7 @@ interface ParentDashboardProps {
 export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { children } = useChildren();
   const [openDialogs, setOpenDialogs] = useState({
     task: false,
     store: false,
@@ -267,6 +269,99 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
     }
   };
 
+  const loadInitialTasks = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (children.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "Nenhuma criança encontrada. Crie um perfil primeiro.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Buscar todas as tarefas iniciais usando RPC
+      const { data: initialTasks, error: fetchError } = await supabase
+        .rpc('get_initial_tasks');
+
+      if (fetchError) {
+        console.error('Error fetching initial tasks:', fetchError);
+        toast({
+          title: "Erro",
+          description: "Erro ao buscar tarefas iniciais: " + fetchError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!initialTasks || initialTasks.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "Nenhuma tarefa inicial encontrada.",
+        });
+        return;
+      }
+
+      // Criar tarefas para todas as crianças
+      const allTasksToCreate = [];
+      for (const child of children) {
+        const tasksForChild = initialTasks.map((task: any) => ({
+          title: task.title,
+          description: task.description,
+          points: task.points || 10,
+          child_id: child.id,
+          created_by: user.id,
+          frequency: task.frequency || 'SEMANAL',
+          weekdays: task.weekdays,
+          time_start: task.time_start,
+          time_end: task.time_end,
+          time_mode: task.time_mode || 'start-end',
+          duration_minutes: task.duration_minutes,
+          is_visible: task.is_visible !== false,
+          is_completed: false
+        }));
+        allTasksToCreate.push(...tasksForChild);
+      }
+
+      const { error: insertError } = await supabase
+        .from('tasks')
+        .insert(allTasksToCreate);
+
+      if (insertError) {
+        console.error('Error creating initial tasks:', insertError);
+        toast({
+          title: "Erro",
+          description: "Erro ao criar tarefas iniciais: " + insertError.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: `${allTasksToCreate.length} tarefas iniciais carregadas com sucesso para ${children.length} criança(s)!`,
+      });
+
+    } catch (error) {
+      console.error('Error in loadInitialTasks:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar tarefas iniciais",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
       <header className="pixel-border p-4 mb-8 text-center relative">
@@ -332,6 +427,16 @@ export const ParentDashboard = ({ onLogout }: ParentDashboardProps) => {
           style={{ borderColor: 'hsl(var(--pixel-red))', color: 'hsl(var(--pixel-red))' }}
         >
           Criar Perfil
+        </button>
+
+        {/* Botão Carregar Tarefas Iniciais */}
+        <button 
+          onClick={loadInitialTasks}
+          className="pixel-btn text-green-400 w-64 text-xl py-4 flex items-center justify-center gap-2" 
+          style={{ borderColor: 'hsl(var(--pixel-green))', color: 'hsl(var(--pixel-green))' }}
+        >
+          <Upload size={20} />
+          Carregar Tarefas Iniciais
         </button>
 
         {/* Botão Faça uma doação */}
