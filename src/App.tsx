@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import Shop from "./pages/Shop";
 import NovoPerfil from "./pages/NovoPerfil";
+import CriarPerfil from "./pages/CriarPerfil";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/loja" element={<Shop />} />
           <Route path="/novoperfil" element={<NovoPerfil />} />
+          <Route path="/criar-perfil" element={<CriarPerfil />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

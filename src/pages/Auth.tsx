@@ -13,6 +13,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -21,9 +22,14 @@ const Auth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Redirect authenticated users to home
+        // Redirect authenticated users
         if (session?.user) {
-          navigate('/');
+          if (isNewUser) {
+            navigate('/criar-perfil');
+            setIsNewUser(false);
+          } else {
+            navigate('/');
+          }
         }
       }
     );
@@ -40,7 +46,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isNewUser]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +109,7 @@ const Auth = () => {
           toast.error(error.message);
         }
       } else {
+        setIsNewUser(true);
         toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
       }
     } catch (error) {
