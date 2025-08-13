@@ -20,12 +20,15 @@ const Home = () => {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const { tasks: allTasks, loading: tasksLoading, error, updateTaskCompletion, getTasksForDate } = useTasks(selectedChildId || undefined);
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated, or to criar-perfil if no children
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
+    } else if (!authLoading && user && !childrenLoading && children.length === 0) {
+      // If user is authenticated but has no children, redirect to criar-perfil
+      navigate('/criar-perfil');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, children, childrenLoading]);
 
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
